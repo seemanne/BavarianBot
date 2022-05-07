@@ -64,6 +64,9 @@ async def bavarianVerification(message):
                     illegal = False
             if(illegal):
                 if (defcon == 1):
+                    timenow = discord.utils.utcnow()
+                    slaptime = datetime.timedelta(minutes=1)
+                    await message.author.edit(timed_out_until=timenow + slaptime)
                     await message.channel.send(f"!slap {author.mention} <:ir_discussion_bain:918147188499021935>")
                 else: 
                     await message.channel.send(f"{author.mention} <:ir_discussion_bain:918147188499021935>")
@@ -98,11 +101,12 @@ async def checkSnail(message):
     for i in range(len(queue)):
         if (queue[i][0] == linkid):
             timestamp = message.created_at - queue[i][1]
+            author = queue[i][2].display_name
             temptime = datetime.datetime(2020,1,1)
             temptime += timestamp
-            await message.channel.send(f'Sorry, {message.author.name}, but that is the biggest snail I\'ve ever seen! It was first posted {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds ago')
+            await message.channel.send(f'Sorry, {message.author.name}, but that is the biggest snail I\'ve ever seen! It was first posted by {author} {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds ago')
             return
-    queue.append((linkid, message.created_at))
+    queue.append([linkid, message.created_at, message.author])
     if (len(queue) > 1000):
         queue.pop(0)
 
