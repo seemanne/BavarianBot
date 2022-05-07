@@ -5,10 +5,11 @@ import queue as que
 import random
 
 intents = discord.Intents.all()
-print('yeet')
+print('Intents set')
 inputfile = open('var.txt', 'r')
 for row in inputfile:
     bavarianid = row
+print('files imported succesfully')
 
 
 
