@@ -110,7 +110,7 @@ async def checkSnail(message):
     if (len(queue) > 1000):
         queue.pop(0)
 
-defcon = 0
+defcon = 1
 queue = []
 auth = open('auth.txt', 'r')
 for row in auth:
