@@ -3,6 +3,7 @@ import discord
 import re
 import queue as que
 import random
+import cinephile
 
 intents = discord.Intents.all()
 print('Intents set')
@@ -10,7 +11,6 @@ inputfile = open('var.txt', 'r')
 for row in inputfile:
     bavarianid = row
 print('files imported succesfully')
-
 
 
 client = discord.Client(intents=intents, activity = discord.Game(name = 'squashing illegal bavarian pings'))
@@ -48,10 +48,21 @@ async def on_message(message):
         await message.channel.send('Yes, I\'m here')
     await checkSnail(message)
     await bavarianVerification(message)
+    await mapStarrer(message)
+    await cinephile.cinemaCheck(message)
     
+async def mapStarrer(message: discord.Message):
+    linksearch = re.search('//www.geoguessr.com/', message.content)
+    rand = random.random()
+    if (linksearch):
+        if (rand < 0.1):
+            responses = [
+            f"ffs {message.author.display_name} stop staring at maps and do something productive",
+            f"{message.author.display_name} this NEET behavior is something I see in Berlin",
+            f'Hey {message.author.display_name}, a real bavarian would go outside instead!']
+            await messageCarousel(message, responses)
 
-
-async def bavarianVerification(message):
+async def bavarianVerification(message: discord.Message):
     global bavarianid
     author = message.author
     authorRoles = author.roles
@@ -67,27 +78,24 @@ async def bavarianVerification(message):
                     timenow = discord.utils.utcnow()
                     slaptime = datetime.timedelta(minutes=1)
                     await message.author.edit(timed_out_until=timenow + slaptime)
-                    await message.channel.send(f"!slap {author.mention} <:ir_discussion_bain:918147188499021935>")
+                    await message.channel.send(f"{author.mention} <:ir_discussion_bain:918147188499021935>")
                 else: 
                     await message.channel.send(f"{author.mention} <:ir_discussion_bain:918147188499021935>")
             else:
                 rand = random.random()
-                if (rand > 0.9):
-                    newrand = random.random()
+                if (rand < 0.01):
                     responses = [
                         f"This is a one-in-a-million shitpost {author.name}, gigantic dub *sips Tegernseebräu*",
                         f"{author.name} I liked that poast very much, hmu if you want to do social media for Bavaria One, our homegrown space program",
                         f"Hey {author.name} that kind of king content is reserved for the Wiesen oida",
                         f"Lieber {author.name} das is ja ein legendärer Post, freundliche Grüsse Dein Maggus",
                         f"Neeeee oida {author.name} so guten kontent hast du ja ewig nicht rausgehauen"]
-                    newrand = newrand * (len(responses) - 1)
-                    newrand = round(newrand)
-                    await message.channel.send(responses[newrand])
+                    await messageCarousel(message, responses)
                 else:
                     print("lost a roll")
 
 
-async def checkSnail(message):
+async def checkSnail(message: discord.Message):
     global queue
     content = message.content
     link_search = re.search('twitter.com/\w*/status/(\w*)', content)
@@ -110,7 +118,13 @@ async def checkSnail(message):
     if (len(queue) > 1000):
         queue.pop(0)
 
-defcon = 1
+async def messageCarousel(message: discord.Message, responses: list):
+    rand = random.random()
+    rand = rand * (len(responses) - 1)
+    rand = round(rand)
+    await message.channel.send(responses[rand])
+
+defcon = 0
 queue = []
 auth = open('auth.txt', 'r')
 for row in auth:
