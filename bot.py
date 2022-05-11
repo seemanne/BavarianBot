@@ -45,7 +45,7 @@ async def on_message(message):
         return
     
     if message.content.startswith('£wifecheck'):
-        await message.channel.send('Yes, I\'m here')
+        await message.channel.send('Yes, I\'m here, DEFCON is: ' + str(defcon))
     await checkSnail(message)
     await bavarianVerification(message)
     await mapStarrer(message)
