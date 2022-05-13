@@ -55,11 +55,12 @@ async def mapStarrer(message: discord.Message):
     linksearch = re.search('//www.geoguessr.com/', message.content)
     rand = random.random()
     if (linksearch):
-        if (rand < 0.1):
+        if (rand < 0.01):
             responses = [
             f"ffs {message.author.display_name} stop staring at maps and do something productive",
-            f"{message.author.display_name} this NEET behavior is something I see in Berlin",
-            f'Hey {message.author.display_name}, a real bavarian would go outside instead!']
+            f"{message.author.display_name} this NEET behavior is something I only wish to see in Berlin",
+            f'Hey {message.author.display_name}, a real bavarian would go outside instead!',
+            f'geoguesser? I hardly knew \'er']
             await messageCarousel(message, responses)
 
 async def bavarianVerification(message: discord.Message):
@@ -104,17 +105,26 @@ async def checkSnail(message: discord.Message):
     else:
         #print('no link found in message')
         return
-    print(linkid)
-    print(message.created_at)
     for i in range(len(queue)):
         if (queue[i][0] == linkid):
             timestamp = message.created_at - queue[i][1]
-            author = queue[i][2].display_name
+            author = queue[i][2]
+            queue[i][3] += 1
+            if (author == message.author.display_name):
+                return
             temptime = datetime.datetime(2020,1,1)
             temptime += timestamp
-            await message.channel.send(f'Sorry, {message.author.name}, but that is the biggest snail I\'ve ever seen! It was first posted by {author} {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds ago')
+            responses = [
+                f'Sorry, {message.author.name}, but that is the biggest snail I\'ve ever seen! It was first posted by {author} {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds ago and has since been posted {queue[i][3]} time(s)',
+                f'Lol {message.author.name}, you\'re such a snail, {author} already posted that {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds ago',
+                f'{message.author.name}, your snailing is so extreme I won\'t bother to check the time. This link has already been posted {queue[i][3]} time(s)',
+                f'Hey, {message.author.name}, if you were to scroll up instead of piping your twitterfeed straight into discord you would see the same post just {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds earlier',
+                f'I regret to inform you, {message.author.name}, but it has been {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds since this was first posted.'
+            ]
+            await messageCarousel(message, responses)
             return
-    queue.append([linkid, message.created_at, message.author])
+    queue.append([linkid, message.created_at, message.author.display_name, 1])
+    print(queue)
     if (len(queue) > 1000):
         queue.pop(0)
 
