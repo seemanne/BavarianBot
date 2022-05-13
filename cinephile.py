@@ -3,6 +3,7 @@ import discord
 import re
 import wikipediaapi as wkpa
 import newspaper
+import random
 
 #INPUT: discord.Message
 #OUTPUT: movie title as a string, None if there is no title
@@ -55,6 +56,9 @@ async def cinemaCheck(message: discord.Message):
     url_i = newspaper.Article(url="%s" % (url), language='en',fetch_images = False, memoize_articles = False, keep_article_html = True)
     url_i.download()
     url_i.parse()
-    await message.channel.send(f'God I love that movie {message.author.display_name} but I think: ' + url_i.text)
+    rand = random.random()
+    if(rand < 0.3):
+        await message.channel.send(f'God I love that movie {message.author.display_name} but I think: ' + url_i.text)
     
+
 
