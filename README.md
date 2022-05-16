@@ -9,3 +9,7 @@ Checks any message containing a group ping and verifies whether the author is ac
 **checkSnail**
 
 Holds a list of the unique id of the last 1000 tweets posted in channels and calls out a user for a repost. 
+
+**cinephile** 
+
+Uses regex to extract movie titles mentioned in the message and combines it with newspapers nlp methods to respond with a letterboxd review of said movie
