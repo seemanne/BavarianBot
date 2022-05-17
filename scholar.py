@@ -61,5 +61,5 @@ embed=discord.Embed(title="peepeepoopoo", url="https://peepee.poopoo.com/", desc
 
 
 clown = 'peepee & poopoo (6942)'
-input = re.search('(\w*) & (\w*) (\(\d{4})\)', clown)
+input = re.search('(\w*) & (\w*) \((\d{4})\)', clown)
 print(input.group(3))
