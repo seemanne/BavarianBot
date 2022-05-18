@@ -107,7 +107,7 @@ async def checkSnail(message: discord.Message):
             timestamp = message.created_at - pd.to_datetime(queue[i][1])
             author = queue[i][2]
             queue[i][3] += 1
-            if (author == message.author.display_name + 'test'):
+            if (author == message.author.display_name):
                 return
             temptime = datetime.datetime(2020,1,1)
             temptime += timestamp
