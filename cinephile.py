@@ -1,4 +1,3 @@
-import imp
 import discord
 import re
 import wikipediaapi as wkpa
@@ -6,59 +5,91 @@ import newspaper
 import random
 
 #INPUT: discord.Message
-#OUTPUT: movie title as a string, None if there is no title
+#OUTPUT: movie title as a string and year as string, None if there is no title
 async def parseMovie(message: discord.Message):
     content = message.content
-    movie_search = re.search('(([A-Z]+ )+)\(\d{4}\)', content)
+    content = content.replace('\'', '')
+    movie_search = re.search('(([A-Z|0-9]+ )+)\((\d{4})\)', content)
     if(movie_search):
         movie = movie_search.group(1)
+        year = movie_search.group(3)
     else:
-        return None
+        return [False, False]
     print('done parsing')
-    return movie
+    return [movie, year]
 
 
-#INPUT: string containing movie title in all caps
-#OUTPUT: string containing possible wikipedia url for the film
-async def createWikistring(match: str):
+#INPUT: string containing wikipedia title
+#OUTPUT: string containing possible wikipedia url for the title
+def createWikistring(match: str):
     wikistring = match.replace(" ", "_")
-    change = False
+    big = True
     for letter in wikistring:
-        if (letter.isupper() and change):
-            wikistring = wikistring.replace(letter, letter.lower())
+        if (big):
+            wikistring = wikistring.replace(letter, letter.upper())
+            big = False
         else:
-            change = True
+            wikistring = wikistring.replace(letter, letter.lower())
         if (letter == '_'):
-            change = False 
+            big = True
     return wikistring
 
 #INPUT: string containing movie title in all caps
 #OUTPUT: string containing possible letterboxd url for the film
-async def createLetterboxdstring(match: str):
+async def createLetterboxdstring(match: str, year: str):
     letterstring = match.replace(' ', "-")
     letterstring = letterstring.rstrip('-')
     letterstring = letterstring.lower()
-    letterstring = 'https://letterboxd.com/film/' + letterstring + '/reviews/by/activity/'
-    return letterstring
+    wiyear = 'https://letterboxd.com/film/' + letterstring + '-' + year + '/reviews/by/activity/'
+    woyear = 'https://letterboxd.com/film/' + letterstring + '/reviews/by/activity/'
+    return [wiyear, woyear]
 
 
 
-#teststring = "Ve RTigo CLOWN "
+teststring = "mArkus södEr"
+string = createWikistring(teststring)
+
 #wiki = wkpa.Wikipedia("en")
 #page = wiki.page(teststring)
 #boo = page.exists()
 #print(createWikistring(teststring))
 async def cinemaCheck(message: discord.Message):
+    withyear = True
     content = await parseMovie(message)
-    if (not content):
+    print(content)
+    if (not content[0]):
         return
-    url = await createLetterboxdstring(content)
-    url_i = newspaper.Article(url="%s" % (url), language='en',fetch_images = False, memoize_articles = False, keep_article_html = True)
-    url_i.download()
-    url_i.parse()
+    url = await createLetterboxdstring(content[0], content[1])
+    print(url)
+    wiarticle = newspaper.Article(url[0], language='en',fetch_images = False, memoize_articles = False, keep_article_html = True)
+    woarticle = newspaper.Article(url[1], language='en',fetch_images = False, memoize_articles = False, keep_article_html = True)
+    wiarticle.download()
+    woarticle.download()
+    try: 
+        wiarticle.parse()
+    except:
+        woarticle.parse()
+        withyear = False
+    if (withyear):
+        embed = discord.Embed(title = content[0] + content [1], url = url[0].rstrip('/reviews/by/activity/'), description = wiarticle.text, color = discord.Color.blue())
+    else:
+        embed = discord.Embed(title = content[0] + content [1], url = url[1].rstrip('/reviews/by/activity/'), description = woarticle.text, color = discord.Color.blue())
     rand = random.random()
+    #hardcoded rng for account holder
+    if(message.author.id == 143379423494799360):
+        rand = 0
     if(rand < 0.3):
-        await message.channel.send(f'God I love that movie {message.author.display_name} but I think: ' + url_i.text)
+        await message.channel.send(embed = embed)
     
-
-
+async def wikiCrawl(message: discord.Message):
+    content = message.content
+    if(not content.startswith('£wiki')):
+        return
+    wiki = wkpa.Wikipedia("en")
+    content = content.lstrip('£wiki ')
+    url = createWikistring(content)
+    page = wiki.page(url)
+    boo = page.exists()
+    if (boo):
+        await message.channel.send(page.summary)
+    print(url)

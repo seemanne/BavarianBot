@@ -4,6 +4,8 @@ import re
 import queue as que
 import random
 import cinephile
+import games
+import pandas as pd
 
 intents = discord.Intents.all()
 print('Intents set')
@@ -20,36 +22,29 @@ async def on_ready():
     print(f'We have logged in as {client.user}')
 
 @client.event
-async def on_message(message):
+async def on_message(message: discord.Message):
 
     
     
     if message.author == client.user:
         return
-    if message.content.startswith('£init'):
-        if(message.author.id != 143379423494799360):
-            return
-        global bavarianid
-        global defcon
-        
-        outputfile = open('var.txt', 'w')
-
-        defcondetection = re.search('defcon: (\d)', message.content)
-        bavarianid = message.role_mentions[0].name
-        outputfile.write(bavarianid)
-        await message.channel.send("Bavarian Verification initialized")
-        print(defcondetection.group(1))
-        if (defcondetection.group(1) == '1'):
-            await message.channel.send('Bringing verification to DEFCON 1')
-            defcon = 1
-        return
+    if message.content.startswith('£'):
+        await admin(message)
     
-    if message.content.startswith('£wifecheck'):
-        await message.channel.send('Yes, I\'m here, DEFCON is: ' + str(defcon))
+    #core features
     await checkSnail(message)
     await bavarianVerification(message)
     await mapStarrer(message)
-    await cinephile.cinemaCheck(message)
+
+    #debug
+
+    #experimental features
+    global experimental
+    if(experimental):
+        await cinephile.cinemaCheck(message)
+        await games.vibeCheck(message, 'Mods')
+        await cinephile.wikiCrawl(message)
+        await randomFlair(message, 0.001)
     
 async def mapStarrer(message: discord.Message):
     linksearch = re.search('//www.geoguessr.com/', message.content)
@@ -105,12 +100,14 @@ async def checkSnail(message: discord.Message):
     else:
         #print('no link found in message')
         return
+    linkid = int(linkid)
     for i in range(len(queue)):
         if (queue[i][0] == linkid):
-            timestamp = message.created_at - queue[i][1]
+            print('match found')
+            timestamp = message.created_at - pd.to_datetime(queue[i][1])
             author = queue[i][2]
             queue[i][3] += 1
-            if (author == message.author.display_name):
+            if (author == message.author.display_name + 'test'):
                 return
             temptime = datetime.datetime(2020,1,1)
             temptime += timestamp
@@ -123,7 +120,7 @@ async def checkSnail(message: discord.Message):
             ]
             await messageCarousel(message, responses)
             return
-    queue.append([linkid, message.created_at, message.author.display_name, 1])
+    queue.append([linkid, str(message.created_at), message.author.display_name, 1])
     print(queue)
     if (len(queue) > 1000):
         queue.pop(0)
@@ -134,7 +131,66 @@ async def messageCarousel(message: discord.Message, responses: list):
     rand = round(rand)
     await message.channel.send(responses[rand])
 
-defcon = 0
+async def randomFlair(message: discord.Message, p: int):
+    rand = random.random()
+    if(rand > p):
+        return
+    if(message.channel.name == 'pensive-cowboy-saloon'):
+        return
+    responses = [
+        f'This is such a cursed chain of comments',
+        f'Why are we here? Just to poast?',
+        f'Look, {message.author.display_name}, I think its time to zipperclown',
+        f'{message.author.mention} who is the most fascinating person you know?',
+        f'God I hate doing the dishes, I just wish Karin was here to do it for me...'
+    ]
+
+#administrative function to take care of config
+async def admin(message: discord.Message):
+
+    #checks privileges
+    if(message.author.id != 143379423494799360):
+        return
+    
+    global bavarianid
+    global defcon
+    global experimental
+    global queue
+
+    #initializes the bot and sets variables
+    if message.content.startswith('£init'):
+        outputfile = open('var.txt', 'w')
+        defcondetection = re.search('defcon: (\d)', message.content)
+        bavarianid = message.role_mentions[0].name
+        outputfile.write(bavarianid)
+        await message.channel.send("Bavarian Verification initialized")
+        print(defcondetection.group(1))
+        if (defcondetection.group(1) == '1'):
+            await message.channel.send('Bringing verification to DEFCON 1')
+            defcon = 1
+        return
+
+    #checks if the bot is online and reports on variables
+    if message.content.startswith('£wifecheck'):
+        await message.channel.send('Yes, I\'m here!' + ' DEFCON is ' + str(defcon) + ' Experimental is ' + str(experimental))
+
+    if message.content.startswith('£experimental'):
+        experimental = not experimental
+        await message.channel.send('Setting experimental to ' + str(experimental))
+
+    if message.content.startswith('£export'):
+        print(queue)
+        df = pd.DataFrame(queue, columns=['linkid', 'timestamp', 'author', 'count'])
+        df.to_csv('tweets.csv', index = False)
+
+    if message.content.startswith('£import'):
+        df = pd.read_csv('tweets.csv')
+        queue = df.values.tolist()
+        print(queue)
+
+
+experimental = True
+defcon = 1
 queue = []
 auth = open('auth.txt', 'r')
 for row in auth:
