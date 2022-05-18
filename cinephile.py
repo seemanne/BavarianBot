@@ -9,6 +9,7 @@ import random
 async def parseMovie(message: discord.Message):
     content = message.content
     content = content.replace('\'', '')
+    content = content.replace(',', '')
     movie_search = re.search('(([A-Z|0-9]+ )+)\((\d{4})\)', content)
     if(movie_search):
         movie = movie_search.group(1)
