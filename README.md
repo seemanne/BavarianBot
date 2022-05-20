@@ -3,7 +3,8 @@ Public version of a barebones discord bot based on discord.py, this repo is main
 
 # Current feature palette
 
-**bavarianVerifier**:
+**bavarianVerifier**
+
 Checks any message containing a group ping and verifies whether the author is actually part of that group and gives a timeout if he isn't. Comes with an additional flair message for group members.
 
 **checkSnail**
