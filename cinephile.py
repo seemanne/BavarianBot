@@ -10,13 +10,14 @@ async def parseMovie(message: discord.Message):
     content = message.content
     content = content.replace('\'', '')
     content = content.replace(',', '')
+    content = content.replace('/', ' ')
     movie_search = re.search('(([A-Z|0-9]+ )+)\((\d{4})\)', content)
     if(movie_search):
         movie = movie_search.group(1)
         year = movie_search.group(3)
     else:
         return [False, False]
-    print('done parsing')
+    print(movie +' ' + str(year))
     return [movie, year]
 
 
@@ -43,7 +44,9 @@ async def createLetterboxdstring(match: str, year: str):
     letterstring = letterstring.lower()
     wiyear = 'https://letterboxd.com/film/' + letterstring + '-' + year + '/reviews/by/activity/'
     woyear = 'https://letterboxd.com/film/' + letterstring + '/reviews/by/activity/'
-    return [wiyear, woyear]
+    widirectlink = 'https://letterboxd.com/film/' + letterstring + '-' + year
+    wodirectlink = 'https://letterboxd.com/film/' + letterstring
+    return [wiyear, woyear, widirectlink, wodirectlink]
 
 
 
@@ -57,7 +60,6 @@ string = createWikistring(teststring)
 async def cinemaCheck(message: discord.Message):
     withyear = True
     content = await parseMovie(message)
-    print(content)
     if (not content[0]):
         return
     url = await createLetterboxdstring(content[0], content[1])
@@ -72,12 +74,14 @@ async def cinemaCheck(message: discord.Message):
         woarticle.parse()
         withyear = False
     if (withyear):
-        embed = discord.Embed(title = content[0] + content [1], url = url[0].rstrip('/reviews/by/activity/'), description = wiarticle.text, color = discord.Color.blue())
+        embed = discord.Embed(title = content[0] + content [1], url = url[2], description = wiarticle.text, color = discord.Color.blue())
     else:
-        embed = discord.Embed(title = content[0] + content [1], url = url[1].rstrip('/reviews/by/activity/'), description = woarticle.text, color = discord.Color.blue())
+        embed = discord.Embed(title = content[0] + content [1], url = url[3], description = woarticle.text, color = discord.Color.blue())
     rand = random.random()
     #hardcoded rng for account holder
     if(message.author.id == 143379423494799360):
+        rand = 0
+    if(message.author.id == 375088684392775680):
         rand = 0
     if(rand < 0.3):
         await message.channel.send(embed = embed)

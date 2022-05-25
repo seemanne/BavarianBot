@@ -24,8 +24,9 @@ async def on_ready():
 @client.event
 async def on_message(message: discord.Message):
 
-    
-    
+    if message.author.bot:
+        #print('bot account')
+        return
     if message.author == client.user:
         return
     if message.content.startswith('£'):
@@ -35,21 +36,24 @@ async def on_message(message: discord.Message):
     await checkSnail(message)
     await bavarianVerification(message)
     await mapStarrer(message)
+    await cinephile.cinemaCheck(message)
+    await games.vibeCheck(message, 'Mods')
+    await cinephile.wikiCrawl(message)
 
     #debug
 
     #experimental features
     global experimental
     if(experimental):
-        await cinephile.cinemaCheck(message)
-        await games.vibeCheck(message, 'Mods')
-        await cinephile.wikiCrawl(message)
         await randomFlair(message, 0.001)
+        await twitterFix(message)
+
     
 async def mapStarrer(message: discord.Message):
     linksearch = re.search('//www.geoguessr.com/', message.content)
     rand = random.random()
     if (linksearch):
+        print('found geoguessr link')
         if (rand < 0.01):
             responses = [
             f"ffs {message.author.display_name} stop staring at maps and do something productive",
@@ -71,7 +75,7 @@ async def bavarianVerification(message: discord.Message):
                     illegal = False
             if(illegal):
                 if (defcon == 1):
-                    timenow = discord.utils.utcnow()
+                    timenow = message.created_at
                     slaptime = datetime.timedelta(minutes=1)
                     await message.author.edit(timed_out_until=timenow + slaptime)
                     await message.channel.send(f"{author.mention} <:ir_discussion_bain:918147188499021935>")
@@ -90,9 +94,32 @@ async def bavarianVerification(message: discord.Message):
                 else:
                     print("lost a roll")
 
+async def twitterFix(message: discord.Message):
+    link_search = re.search('twitter.com/\w*/status/(\w*)', message.content)
+    if (not link_search):
+        return
+    linkid = link_search.group(1)
+    names = [
+        'MarkusSoeder',
+        'gammbus',
+        'yourmumlmaoxD',
+        'realDonaldTrump',
+        'bainsothis',
+        'rarebavarianuser',
+        'ifyoureadthis',
+        'bainpog',
+        'johnpostbabbypls'
+    ]
+    rand = random.random()
+    rand = rand * (len(names) - 1)
+    rand = round(rand)
+    await message.channel.send(f'Hold up, let me fix this for you {message.author.display_name} \nhttps://twitter.com/'+ str(names[rand]) +'/status/' + str(linkid))
+    
+
 
 async def checkSnail(message: discord.Message):
     global queue
+    global leaderboard
     content = message.content
     link_search = re.search('twitter.com/\w*/status/(\w*)', content)
     if (link_search):
@@ -119,6 +146,13 @@ async def checkSnail(message: discord.Message):
                 f'I regret to inform you, {message.author.name}, but it has been {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds since this was first posted.'
             ]
             await messageCarousel(message, responses)
+            registered = False
+            for entry in leaderboard:
+                if entry[0] == message.author.id:
+                    entry[1] += 1
+                    registered = True
+            if not registered:
+                leaderboard.append([message.author.id, 1, message.author.mention])
             return
     queue.append([linkid, str(message.created_at), message.author.display_name, 1])
     print(queue)
@@ -144,9 +178,11 @@ async def randomFlair(message: discord.Message, p: int):
         f'{message.author.mention} who is the most fascinating person you know?',
         f'God I hate doing the dishes, I just wish Karin was here to do it for me...'
     ]
+    await messageCarousel(message, responses)
 
 #administrative function to take care of config
 async def admin(message: discord.Message):
+
 
     #checks privileges
     if(message.author.id != 143379423494799360):
@@ -156,6 +192,7 @@ async def admin(message: discord.Message):
     global defcon
     global experimental
     global queue
+    global leaderboard
 
     #initializes the bot and sets variables
     if message.content.startswith('£init'):
@@ -188,10 +225,19 @@ async def admin(message: discord.Message):
         queue = df.values.tolist()
         print(queue)
 
+    if message.content.startswith('£leaderboard'):
+        sortboard = sorted(leaderboard, key = lambda snails: snails[1])
+        content = ''
+        for entry in sortboard:
+            content += entry[2] + ' has ' + str(entry[1]) + ' tracked snails. \n'
+        embed = discord.Embed(title = 'Snailboard', description= content )
+        await message.channel.send(embed = embed)
+
 
 experimental = True
 defcon = 1
 queue = []
+leaderboard = []
 auth = open('auth.txt', 'r')
 for row in auth:
     authString = row

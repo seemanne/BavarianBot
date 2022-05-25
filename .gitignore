@@ -132,3 +132,4 @@ dmypy.json
 # Own additions
 auth.txt
 tweets.csv
+vibes.csv
