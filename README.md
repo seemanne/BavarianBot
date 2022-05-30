@@ -13,7 +13,7 @@ Holds a list of the unique id of the last 1000 tweets posted in channels and cal
 
 **cinephile** 
 
-Uses regex to extract movie titles mentioned in the message (using the criterion collection format, i.e. <TITLE> (<year of release>) )and combines it with newspapers nlp methods to respond with a letterboxd review of said movie
+Uses regex to extract movie titles mentioned in the message (using the criterion collection format, i.e. <TITLE> (\<year of release\>) )and combines it with newspapers nlp methods to respond with a letterboxd review of said movie
 
 **scholar**
 
