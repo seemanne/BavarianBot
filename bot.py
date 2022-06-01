@@ -3,15 +3,14 @@ import discord
 import re
 import queue as que
 import random
+import pandas as pd
 import cinephile
 import games
-import pandas as pd
 
 intents = discord.Intents.all()
 print('Intents set')
 inputfile = open('var.txt', 'r')
-for row in inputfile:
-    bavarianid = row
+bavarianid = inputfile.read()
 print('files imported succesfully')
 
 
@@ -37,16 +36,18 @@ async def on_message(message: discord.Message):
     await bavarianVerification(message)
     await mapStarrer(message)
     await cinephile.cinemaCheck(message)
-    await games.vibeCheck(message, 'Mods')
-    await cinephile.wikiCrawl(message)
+    global mods
+    await games.vibeCheck(message, mods)
 
     #debug
+
 
     #experimental features
     global experimental
     if(experimental):
         await randomFlair(message, 0.001)
-        await twitterFix(message)
+        await cinephile.wikiCrawl(message)
+        #await twitterFix(message)
 
     
 async def mapStarrer(message: discord.Message):
@@ -193,6 +194,7 @@ async def admin(message: discord.Message):
     global experimental
     global queue
     global leaderboard
+    global mods
 
     #initializes the bot and sets variables
     if message.content.startswith('£init'):
@@ -206,6 +208,9 @@ async def admin(message: discord.Message):
             await message.channel.send('Bringing verification to DEFCON 1')
             defcon = 1
         return
+    
+    if message.content.startswith('£mods'):
+        mods = message.role_mentions[0].id
 
     #checks if the bot is online and reports on variables
     if message.content.startswith('£wifecheck'):
@@ -219,11 +224,16 @@ async def admin(message: discord.Message):
         print(queue)
         df = pd.DataFrame(queue, columns=['linkid', 'timestamp', 'author', 'count'])
         df.to_csv('tweets.csv', index = False)
+        df = pd.DataFrame(leaderboard, columns=['author_id', 'count', 'author_mention'])
+        df.to_csv('leaderboard.csv', index = False)
 
     if message.content.startswith('£import'):
         df = pd.read_csv('tweets.csv')
         queue = df.values.tolist()
-        print(queue)
+        df = pd.read_csv('leaderboard.csv')
+        leaderboard = df.values.tolist()
+        message.channel.send(f'Successfully imported files. Tweet log with {len(queue)} entries, Leaderboard with {len(leaderboard)} entries.')
+        print(df.head())
 
     if message.content.startswith('£leaderboard'):
         sortboard = sorted(leaderboard, key = lambda snails: snails[1])
@@ -237,8 +247,8 @@ async def admin(message: discord.Message):
 experimental = True
 defcon = 1
 queue = []
+mods = 0
 leaderboard = []
 auth = open('auth.txt', 'r')
-for row in auth:
-    authString = row
+authString = auth.read()
 client.run(authString)

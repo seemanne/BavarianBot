@@ -5,13 +5,17 @@ import datetime as dt
 
 #vibes.csv: userid (int) | user mention (str) | most recent vibe (int) | checkcount last hour (int) | datetime of last check (str) 
 
-async def vibeCheck(message: discord.Message, mods: str):
-    if(not message.content.startswith('vibecheck')):
+async def vibeCheck(message: discord.Message, mods):
+    if(not message.content.startswith('£vibe')):
         return
+    
+    czechmode = False
+    if(message.content.startswith('£vibeczech')):
+        czechmode = True
     
     rand = random.randint(0, 100)
     delta = dt.timedelta(hours=2)
-    cutoff = 2
+    cutoff = 0
     modrate = 2
     currenttime = message.created_at
 
@@ -34,7 +38,7 @@ async def vibeCheck(message: discord.Message, mods: str):
     #figure out punishment level
     punishment = 1
     for role in message.author.roles:
-        if role.name == mods:
+        if role.id == mods:
             punishment += modrate
     for row in data:
         if row[0] == message.author.id:
@@ -45,29 +49,45 @@ async def vibeCheck(message: discord.Message, mods: str):
 
     rand = round(rand/punishment)
 
+    #generate response dicts
 
-    if (rand < 27):
-        flavortext = ' Yikes!'
-    if (rand > 27):
-        flavortext = ' (and thats ok)'
-    if (rand > 40):
-        flavortext = ' It\'s getting there, don\'t worry'
-    if (rand > 50):
-        flavortext = ' Thats an above average vibe!'
-    if (rand == 69):
-        flavortext = ' Nice!'
-    if (rand > 69):
-        flavortext = ' WOWZERS what a vibe'
-    if (rand == 84):
-        flavortext = ' L I T E R A L L Y  8 4'
-    if (rand > 84):
-        flavortext = ' Big dub of a vibe there!'
-    if (rand > 99):
-        flavortext = ' Your vibe is so high John will have to poast babbies'
+    english = {
+        0 : 'Yikes!',
+        15 : '<:ir_discussion_bain:918147188499021935>',
+        27 : '(and thats ok)',
+        40 : 'It\'s getting there, don\'t worry',
+        51 : 'Thats an above average vibe!',
+        69 : 'Nice!',
+        70 : 'WOWZERS what a vibe',
+        84 : 'L I T E R A L L Y  84',
+        85 : 'Big dub of a vibe there',
+        100 : 'Your vibe is so high john will have to poast babbies',
+        200 : f'{message.author.display_name} your vibe is at ' + str(rand) + '%! '
+    }
+    czech = {
+        0 : 'Jejda!',
+        27 : '(to neva)',
+        40 : 'Moc nechybí, nevěš hlavu',
+        51 : 'To je nadprůměrnej vajb!',
+        69 : 'Hezky!',
+        70 : 'TÝJO! To je vajb!',
+        84 : 'D O S L O V A 84',
+        85 : 'No ty krávo, ty si dobře vajbíš!',
+        89 : '✌️ získáváš certifikát svobody',
+        90 : 'To sem dlouho neviděl někoho takhle vajbit!',
+        100 : 'Tvůj vajb je tak vysokej, že Johnovi nezbyde nic než poastnout špunty',
+        200 : f'{message.author.display_name} tvůj vajb je ' + str(rand) + ' %! '
+    }
+    language = english
+    if(czechmode): language = czech
 
-    
 
-    await message.channel.send(f'{message.author.display_name} your vibe is at ' + str(rand) + '%!' + flavortext)
+    for key in language.keys():
+        if (rand >= key):
+            flavortext = language[key]
+    text = language[200] + flavortext
+
+    await message.channel.send(text)
 
     exists = False
     for row in data:
