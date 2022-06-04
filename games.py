@@ -13,6 +13,10 @@ async def vibeCheck(message: discord.Message, mods):
     if(message.content.startswith('€vibeczech')):
         czechmode = True
     
+    briishmode = False
+    if(message.content.startswith('€vibecheque')):
+        briishmode = True
+    
     rand = random.randint(0, 100)
     delta = dt.timedelta(minutes = 15)
     cutoff = 0
@@ -97,6 +101,7 @@ async def vibeCheck(message: discord.Message, mods):
     }
     language = english
     if(czechmode): language = czech
+    if(briishmode): language = british
 
 
     for key in language.keys():
