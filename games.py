@@ -78,6 +78,19 @@ async def vibeCheck(message: discord.Message, mods):
         100 : 'Tvůj vajb je tak vysokej, že Johnovi nezbyde nic než poastnout špunty',
         200 : f'{message.author.display_name} tvůj vajb je ' + str(rand) + ' %! '
     }
+    british = {
+        0 : 'Whew!',
+        15 : '<:ir_discussion_bain:918147188499021935>',
+        27 : '(and that is alright fellow)',
+        40 : 'It is getting there, do not worry friend',
+        51 : 'That is indeed an above average vibe!',
+        69 : 'Blimey!',
+        70 : 'Incredible vibe',
+        84 : 'Q U I T E  F R A N K L Y 84',
+        85 : 'That vibe is bigger than the Elizabeth Tower!',
+        100 : 'Your vibes are so good, they might host an illegal lockdown party!',
+        200 : f'{message.author.display_name}, by her majesty decree, you have a vibe of ' + str(rand) + '%! '
+    }
     language = english
     if(czechmode): language = czech
 
