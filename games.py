@@ -6,15 +6,15 @@ import datetime as dt
 #vibes.csv: userid (int) | user mention (str) | most recent vibe (int) | checkcount last hour (int) | datetime of last check (str) 
 
 async def vibeCheck(message: discord.Message, mods):
-    if(not message.content.startswith('£vibe')):
+    if(not message.content.startswith('€vibe')):
         return
     
     czechmode = False
-    if(message.content.startswith('£vibeczech')):
+    if(message.content.startswith('€vibeczech')):
         czechmode = True
     
     rand = random.randint(0, 100)
-    delta = dt.timedelta(hours=2)
+    delta = dt.timedelta(minutes = 15)
     cutoff = 0
     modrate = 2
     currenttime = message.created_at

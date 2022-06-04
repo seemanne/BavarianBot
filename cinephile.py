@@ -76,7 +76,7 @@ async def cinemaCheck(message: discord.Message):
     if (withyear):
         embed = discord.Embed(title = content[0] + content [1], url = url[2], description = wiarticle.text, color = discord.Color.blue())
     else:
-        embed = discord.Embed(title = content[0] + content [1], url = url[3], description = woarticle.text, color = discord.Color.blue())
+        embed = discord.Embed(title = content[0], url = url[3], description = woarticle.text, color = discord.Color.blue())
     rand = random.random()
     #hardcoded rng for account holder
     if(message.author.id == 143379423494799360):
