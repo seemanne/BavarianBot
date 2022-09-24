@@ -4,14 +4,26 @@ import re
 import queue as que
 import random
 import pandas as pd
+import sqlite3
+import time
+
+#import giffer
 import cinephile
 import games
+#import imagesnail
+
+
 
 intents = discord.Intents.all()
 print('Intents set')
 inputfile = open('var.txt', 'r')
 bavarianid = inputfile.read()
 print('files imported succesfully')
+#df = pd.DataFrame(columns = ['contentaware'])
+#print('created fresh imagehash database')
+#df.to_csv('images.csv', index = False)
+con = sqlite3.connect('chalkotheke.db')
+#con = sqlite3.connect('newexample.db')
 
 
 client = discord.Client(intents=intents, activity = discord.Game(name = 'squashing illegal bavarian pings'))
@@ -31,23 +43,29 @@ async def on_message(message: discord.Message):
     if message.content.startswith('£'):
         await admin(message)
     
+    global enabled
     #core features
-    await checkSnail(message)
-    await bavarianVerification(message)
-    await mapStarrer(message)
-    await cinephile.cinemaCheck(message)
-    global mods
-    await games.vibeCheck(message, mods)
+    if(enabled):
 
+        await checkSnail(message)
+        await bavarianVerification(message)
+        await mapStarrer(message)
+        await cinephile.cinemaCheck(message)
+        global mods
+        await games.vibeCheck(message, mods)
+
+    global twitterfix
+    if(twitterfix): await twitterFix(message)
     #debug
 
 
     #experimental features
     global experimental
     if(experimental):
+        #await imagesnail.detect(message)
         await randomFlair(message, 0.001)
         await cinephile.wikiCrawl(message)
-        #await twitterFix(message)
+    con.commit()
 
     
 async def mapStarrer(message: discord.Message):
@@ -136,6 +154,7 @@ async def checkSnail(message: discord.Message):
             author = queue[i][2]
             queue[i][3] += 1
             if (author == message.author.display_name):
+                #print('selfsnail, lol')
                 return
             temptime = datetime.datetime(2020,1,1)
             temptime += timestamp
@@ -147,13 +166,17 @@ async def checkSnail(message: discord.Message):
                 f'I regret to inform you, {message.author.name}, but it has been {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds since this was first posted.'
             ]
             await messageCarousel(message, responses)
-            registered = False
-            for entry in leaderboard:
-                if entry[0] == message.author.id:
-                    entry[1] += 1
-                    registered = True
+            registered = True
+            cur = con.cursor()
+            res = cur.execute(f'select * from leaderboard where author_id = {message.author.id}')
+            if res.fetchone() == None: registered = False
             if not registered:
-                leaderboard.append([message.author.id, 1, message.author.mention])
+                cur.execute(f'insert into leaderboard values ({message.author.id}, 1, \'{message.author.mention}\')')
+                await message.channel.send(f'Adding new user to db, {message.author.mention} congrats on your first snail!')
+            else:
+                res = cur.execute(f'select * from leaderboard where author_id = {message.author.id}')
+                cur.execute(f'update leaderboard set count = {res.fetchmany()[0][1] + 1} where author_id = {message.author.id}')
+            cur.close()
             return
     queue.append([linkid, str(message.created_at), message.author.display_name, 1])
     print(queue)
@@ -184,7 +207,6 @@ async def randomFlair(message: discord.Message, p: int):
 #administrative function to take care of config
 async def admin(message: discord.Message):
 
-
     #checks privileges
     if(message.author.id != 143379423494799360):
         return
@@ -195,6 +217,11 @@ async def admin(message: discord.Message):
     global queue
     global leaderboard
     global mods
+    global enabled
+    global twitterfix
+
+    cur = con.cursor()
+    cur.arraysize = 5
 
     #initializes the bot and sets variables
     if message.content.startswith('£init'):
@@ -212,6 +239,20 @@ async def admin(message: discord.Message):
     if message.content.startswith('£mods'):
         mods = message.role_mentions[0].id
 
+    if message.content.startswith('£sql'):
+        content = message.content.replace('£sql ','')
+        t0 = time.process_time()
+        await message.channel.send('executing: ' + content)
+        try: 
+            res = cur.execute(content)
+        except Exception as e:
+            await message.channel.send('Querry failed with: ' + str(e))
+            return
+        clown = res.fetchmany()
+        await message.channel.send(clown)
+        await message.channel.send('execution time: ' + str(time.process_time()-t0))
+
+
     #checks if the bot is online and reports on variables
     if message.content.startswith('£wifecheck'):
         await message.channel.send('Yes, I\'m here!' + ' DEFCON is ' + str(defcon) + ' Experimental is ' + str(experimental))
@@ -220,28 +261,49 @@ async def admin(message: discord.Message):
         experimental = not experimental
         await message.channel.send('Setting experimental to ' + str(experimental))
 
+    if message.content.startswith('£twitterfix'):
+        twitterfix = not twitterfix
+
     if message.content.startswith('£export'):
         print(queue)
         df = pd.DataFrame(queue, columns=['linkid', 'timestamp', 'author', 'count'])
         df.to_csv('tweets.csv', index = False)
-        df = pd.DataFrame(leaderboard, columns=['author_id', 'count', 'author_mention'])
-        df.to_csv('leaderboard.csv', index = False)
+
+    if message.content.startswith('£migrate'):
+        cur.execute('create table leaderboard(author_id int, count int, author_mention text)')
+        count = 0
+        for row in leaderboard:
+            cur.execute('insert into leaderboard values (' + str(row[0]) + ',' + str(row[1]) + ',\'' + row[2] + '\')')
+            con.commit()
+            count += 1
+        await message.channel.send(f'Created leaderboard table with {count} entries.')
+        cur.execute('create unique index idx_author_id on leaderboard (author_id)')
+        con.commit()
+        await message.channel.send('Created index column on variable author_id')
+
 
     if message.content.startswith('£import'):
-        df = pd.read_csv('tweets.csv')
-        queue = df.values.tolist()
         df = pd.read_csv('leaderboard.csv')
         leaderboard = df.values.tolist()
-        message.channel.send(f'Successfully imported files. Tweet log with {len(queue)} entries, Leaderboard with {len(leaderboard)} entries.')
-        print(df.head())
+        df = pd.read_csv('tweets.csv')
+        queue = df.values.tolist()
+        await message.channel.send(f'Successfully imported files. Tweet log with {len(queue)} entries, Leaderboard with {len(leaderboard)} entries.')
 
     if message.content.startswith('£leaderboard'):
-        sortboard = sorted(leaderboard, key = lambda snails: snails[1])
         content = ''
-        for entry in sortboard:
-            content += entry[2] + ' has ' + str(entry[1]) + ' tracked snails. \n'
-        embed = discord.Embed(title = 'Snailboard', description= content )
+        for row in cur.execute('select author_mention, count from leaderboard order by count desc'):
+            content += f'{row[0]} has {row[1]} tracked snails. \n'
+        embed = discord.Embed(title = 'Snailboard', description= content)
         await message.channel.send(embed = embed)
+    
+    if message.content.startswith('£toggle'):
+        enabled = not enabled
+        if(enabled):
+            await message.channel.send('Enabling core features')
+        else:
+            await message.channel.send('Disabling the bots core features')
+    
+    cur.close()
 
 
 experimental = True
@@ -249,6 +311,8 @@ defcon = 1
 queue = []
 mods = 0
 leaderboard = []
+enabled = True
+twitterfix = False
 auth = open('auth.txt', 'r')
 authString = auth.read()
 client.run(authString)
