@@ -159,7 +159,7 @@ async def checkSnail(message: discord.Message):
             temptime = datetime.datetime(2020,1,1)
             temptime += timestamp
             responses = [
-                f'Sorry, {message.author.name}, but that is the biggest snail I\'ve ever seen! It was first posted by {author} {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds ago and has since been posted {queue[i][3]} time(s)',
+                f'Sorry, {message.author.name}, but that is the biggest snail I\'ve ever seen! It was first posted by {author} {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds ago and has since been posted {queue[i][3]- 1} time(s)',
                 f'Lol {message.author.name}, you\'re such a snail, {author} already posted that {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds ago',
                 f'{message.author.name}, your snailing is so extreme I won\'t bother to check the time. This link has already been posted {queue[i][3]} time(s)',
                 f'Hey, {message.author.name}, if you were to scroll up instead of piping your twitterfeed straight into discord you would see the same post just {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds earlier',
