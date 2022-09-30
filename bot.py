@@ -9,7 +9,7 @@ import time
 import secrets
 from discord import app_commands
 
-import giffer
+#import giffer
 import cinephile
 import games
 #import imagesnail
