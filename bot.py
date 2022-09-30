@@ -56,6 +56,8 @@ async def on_message(message: discord.Message):
         return
     if message.content.startswith('£'):
         await admin(message)
+        
+    if(str(message.channel.type) == 'private'): return
     
     global enabled
     #core features
