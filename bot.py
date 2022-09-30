@@ -56,9 +56,9 @@ async def on_message(message: discord.Message):
         return
     if message.content.startswith('£'):
         await admin(message)
-        
-    if(str(message.channel.type) == 'private'): return
     
+    if(str(message.channel.type) == 'private'): return
+
     global enabled
     #core features
     if(enabled):
@@ -335,9 +335,10 @@ async def snail_gamble(interaction: discord.Interaction, link: str):
     for i in range(len(queue)):
         if (queue[i][0] == linkid):
             await interaction.response.send_message('This link is snail, post at your own risk!', ephemeral = True)
-            await interaction.user.timeout(datetime.timedelta(minutes = 1), reason = 'Lost snail gamble!')
             return
     await interaction.response.send_message('This link is not snail!',ephemeral= True)
+    await interaction.user.timeout(datetime.timedelta(minutes = 1), reason = 'Lost snail gamble!')
+
 
 experimental = True
 defcon = 1
