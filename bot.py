@@ -6,8 +6,10 @@ import random
 import pandas as pd
 import sqlite3
 import time
+import secrets
+from discord import app_commands
 
-#import giffer
+import giffer
 import cinephile
 import games
 #import imagesnail
@@ -26,7 +28,19 @@ con = sqlite3.connect('chalkotheke.db')
 #con = sqlite3.connect('newexample.db')
 
 
-client = discord.Client(intents=intents, activity = discord.Game(name = 'squashing illegal bavarian pings'))
+
+
+class MyClient(discord.Client):
+    def __init__(self, *, intents: discord.Intents, **options):
+        super().__init__(intents=intents, **options)
+        self.tree = app_commands.CommandTree(self)
+
+    async def setup_hook(self):
+        # This copies the global commands over to your guild.
+        self.tree.copy_global_to(guild=secrets.MY_GUILD)
+        await self.tree.sync(guild=secrets.MY_GUILD)
+
+client = MyClient(intents=intents, activity = discord.Game(name = 'squashing illegal bavarian pings'))
 
 @client.event
 async def on_ready():
@@ -63,7 +77,7 @@ async def on_message(message: discord.Message):
     global experimental
     if(experimental):
         #await imagesnail.detect(message)
-        await randomFlair(message, 0.001)
+        await randomFlair(message, 0.0001)
         await cinephile.wikiCrawl(message)
     con.commit()
 
@@ -94,10 +108,9 @@ async def bavarianVerification(message: discord.Message):
                     illegal = False
             if(illegal):
                 if (defcon == 1):
-                    timenow = message.created_at
                     slaptime = datetime.timedelta(minutes=1)
-                    await message.author.edit(timed_out_until=timenow + slaptime)
                     await message.channel.send(f"{author.mention} <:ir_discussion_bain:918147188499021935>")
+                    await message.author.timeout(slaptime, reason='Illegal Bavarian Ping')
                 else: 
                     await message.channel.send(f"{author.mention} <:ir_discussion_bain:918147188499021935>")
             else:
@@ -283,11 +296,9 @@ async def admin(message: discord.Message):
 
 
     if message.content.startswith('£import'):
-        df = pd.read_csv('leaderboard.csv')
-        leaderboard = df.values.tolist()
         df = pd.read_csv('tweets.csv')
         queue = df.values.tolist()
-        await message.channel.send(f'Successfully imported files. Tweet log with {len(queue)} entries, Leaderboard with {len(leaderboard)} entries.')
+        await message.channel.send(f'Successfully imported files. Tweet log with {len(queue)} entries.')
 
     if message.content.startswith('£leaderboard'):
         content = ''
@@ -305,6 +316,26 @@ async def admin(message: discord.Message):
     
     cur.close()
 
+@client.tree.command()
+@app_commands.describe(
+    link='The twitter link you want to check'
+)
+async def snail_gamble(interaction: discord.Interaction, link: str):
+    """Tests your tweet against the current tweet queue. Careful: the bot slaps you if it isn't snail."""
+    global queue
+    link_search = re.search('twitter.com/\w*/status/(\w*)', link)
+    if (link_search):
+        linkid = link_search.group(1)
+    else:
+        await interaction.response.send_message(f'Sorry, but this is not a valid twitter link!', ephemeral= True)
+        return
+    linkid = int(linkid)
+    for i in range(len(queue)):
+        if (queue[i][0] == linkid):
+            await interaction.response.send_message('This link is snail, post at your own risk!', ephemeral = True)
+            await interaction.user.timeout(datetime.timedelta(minutes = 1), reason = 'Lost snail gamble!')
+            return
+    await interaction.response.send_message('This link is not snail!',ephemeral= True)
 
 experimental = True
 defcon = 1
@@ -313,6 +344,4 @@ mods = 0
 leaderboard = []
 enabled = True
 twitterfix = False
-auth = open('auth.txt', 'r')
-authString = auth.read()
-client.run(authString)
+client.run(secrets.AUTH)
