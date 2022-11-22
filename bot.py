@@ -6,13 +6,15 @@ import random
 import pandas as pd
 import sqlite3
 import time
-import secrets
+import my_secrets
 from discord import app_commands
 
 #import giffer
 import cinephile
 import games
 #import imagesnail
+import disutils
+from my_secrets import MOD_ID
 
 
 
@@ -37,14 +39,20 @@ class MyClient(discord.Client):
 
     async def setup_hook(self):
         # This copies the global commands over to your guild.
-        self.tree.copy_global_to(guild=secrets.MY_GUILD)
-        await self.tree.sync(guild=secrets.MY_GUILD)
+        self.tree.copy_global_to(guild=my_secrets.MY_GUILD)
+        await self.tree.sync(guild=my_secrets.MY_GUILD)
 
 client = MyClient(intents=intents, activity = discord.Game(name = 'squashing illegal bavarian pings'))
 
 @client.event
 async def on_ready():
     print(f'We have logged in as {client.user}')
+    me = client.get_user(my_secrets.MY_ACC_ID)
+    await me.create_dm()
+    global me_dm
+    me_dm = me.dm_channel
+    await me_dm.send('Bot is now active!')
+    await client.get_channel(my_secrets.LOG_CHANNEL).send('Snailbot is now active.')
 
 @client.event
 async def on_message(message: discord.Message):
@@ -58,6 +66,7 @@ async def on_message(message: discord.Message):
         await admin(message)
     
     if(str(message.channel.type) == 'private'): return
+
 
     global enabled
     #core features
@@ -83,6 +92,12 @@ async def on_message(message: discord.Message):
         await cinephile.wikiCrawl(message)
     con.commit()
 
+@client.event
+async def on_message_delete(message: discord.Message):
+    global recent_snails_list
+    for i in iter(recent_snails_list):
+        if i == message.id:
+            await message.channel.send(f'It looks like {message.author.mention} tried to delete their snail. Here is their message in its full glory: \n {message.content}')
     
 async def mapStarrer(message: discord.Message):
     linksearch = re.search('//www.geoguessr.com/', message.content)
@@ -95,7 +110,7 @@ async def mapStarrer(message: discord.Message):
             f"{message.author.display_name} this NEET behavior is something I only wish to see in Berlin",
             f'Hey {message.author.display_name}, a real bavarian would go outside instead!',
             f'geoguesser? I hardly knew \'er']
-            await messageCarousel(message, responses)
+            await disutils.messageCarousel(message, responses)
 
 async def bavarianVerification(message: discord.Message):
     global bavarianid
@@ -124,7 +139,7 @@ async def bavarianVerification(message: discord.Message):
                         f"Hey {author.name} that kind of king content is reserved for the Wiesen oida",
                         f"Lieber {author.name} das is ja ein legendärer Post, freundliche Grüsse Dein Maggus",
                         f"Neeeee oida {author.name} so guten kontent hast du ja ewig nicht rausgehauen"]
-                    await messageCarousel(message, responses)
+                    await disutils.messageCarousel(message, responses)
                 else:
                     print("lost a roll")
 
@@ -154,6 +169,7 @@ async def twitterFix(message: discord.Message):
 async def checkSnail(message: discord.Message):
     global queue
     global leaderboard
+    global recent_snails_list
     content = message.content
     link_search = re.search('twitter.com/\w*/status/(\w*)', content)
     if (link_search):
@@ -164,23 +180,31 @@ async def checkSnail(message: discord.Message):
     linkid = int(linkid)
     for i in range(len(queue)):
         if (queue[i][0] == linkid):
-            print('match found')
             timestamp = message.created_at - pd.to_datetime(queue[i][1])
-            author = queue[i][2]
+            sniper_id = queue[i][2]
+            sniper = client.get_user(sniper_id)
             queue[i][3] += 1
-            if (author == message.author.display_name):
-                #print('selfsnail, lol')
-                return
+            if queue[i][3] > 5:
+                global me_dm
+                await me_dm.send(f'something fuckie going on')
+                await me_dm.send(f'user: {message.author.name}, server: {message.guild.name}, channel: {message.channel.name}')
+            if (sniper.id == message.author.id):
+                print('selfsnail, lol')
+                #return
             temptime = datetime.datetime(2020,1,1)
             temptime += timestamp
             responses = [
-                f'Sorry, {message.author.name}, but that is the biggest snail I\'ve ever seen! It was first posted by {author} {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds ago and has since been posted {queue[i][3]- 1} time(s)',
-                f'Lol {message.author.name}, you\'re such a snail, {author} already posted that {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds ago',
-                f'{message.author.name}, your snailing is so extreme I won\'t bother to check the time. This link has already been posted {queue[i][3]} time(s)',
+                f'Sorry, {message.author.name}, but that is the biggest snail I\'ve ever seen! It was first posted by {sniper.display_name} {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds ago and has since been posted {disutils.numeral_adverb(queue[i][3]- 1)}.',
+                f'Lol {message.author.name}, you\'re such a snail, {sniper.display_name} already posted that {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds ago',
+                f'{message.author.name}, your snailing is so extreme I won\'t bother to check the time. This link has now been posted {disutils.numeral_adverb(queue[i][3])}!',
                 f'Hey, {message.author.name}, if you were to scroll up instead of piping your twitterfeed straight into discord you would see the same post just {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds earlier',
                 f'I regret to inform you, {message.author.name}, but it has been {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds since this was first posted.'
             ]
-            await messageCarousel(message, responses)
+            await disutils.messageCarousel(message, responses)
+
+            recent_snails_list.append(message.id)
+            if (len(recent_snails_list) > 5): recent_snails_list.pop(0)
+
             registered = True
             cur = con.cursor()
             res = cur.execute(f'select * from leaderboard where author_id = {message.author.id}')
@@ -191,18 +215,21 @@ async def checkSnail(message: discord.Message):
             else:
                 res = cur.execute(f'select * from leaderboard where author_id = {message.author.id}')
                 cur.execute(f'update leaderboard set count = {res.fetchmany()[0][1] + 1} where author_id = {message.author.id}')
+            
+            registered = True
+            res = cur.execute(f'select * from snipeboard where author_id = {sniper.id}')
+            if res.fetchone() == None: registered = False
+            if not registered:
+                cur.execute(f'insert into snipeboard values ({sniper.id}, 1, \'{sniper.mention}\')')
+                await message.channel.send(f'Adding new user to snipeboard. Damn {sniper.mention}, you did {message.author.mention} dirty!')
+            else:
+                res = cur.execute(f'select * from snipeboard where author_id = {sniper.id}')
+                cur.execute(f'update snipeboard set score = {res.fetchmany()[0][1] + 1} where author_id = {sniper.id}')            
             cur.close()
             return
-    queue.append([linkid, str(message.created_at), message.author.display_name, 1])
-    print(queue)
+    queue.append([linkid, str(message.created_at), message.author.id, 1])
     if (len(queue) > 1000):
         queue.pop(0)
-
-async def messageCarousel(message: discord.Message, responses: list):
-    rand = random.random()
-    rand = rand * (len(responses) - 1)
-    rand = round(rand)
-    await message.channel.send(responses[rand])
 
 async def randomFlair(message: discord.Message, p: int):
     rand = random.random()
@@ -217,7 +244,7 @@ async def randomFlair(message: discord.Message, p: int):
         f'{message.author.mention} who is the most fascinating person you know?',
         f'God I hate doing the dishes, I just wish Karin was here to do it for me...'
     ]
-    await messageCarousel(message, responses)
+    await disutils.messageCarousel(message, responses)
 
 #administrative function to take care of config
 async def admin(message: discord.Message):
@@ -285,14 +312,9 @@ async def admin(message: discord.Message):
         df.to_csv('tweets.csv', index = False)
 
     if message.content.startswith('£migrate'):
-        cur.execute('create table leaderboard(author_id int, count int, author_mention text)')
-        count = 0
-        for row in leaderboard:
-            cur.execute('insert into leaderboard values (' + str(row[0]) + ',' + str(row[1]) + ',\'' + row[2] + '\')')
-            con.commit()
-            count += 1
-        await message.channel.send(f'Created leaderboard table with {count} entries.')
-        cur.execute('create unique index idx_author_id on leaderboard (author_id)')
+        cur.execute('create table snipeboard(author_id int, score int, author_mention text)')
+        await message.channel.send('Created snipeboard')
+        cur.execute('create unique index idx_author_id on snipeboard (author_id)')
         con.commit()
         await message.channel.send('Created index column on variable author_id')
 
@@ -308,6 +330,12 @@ async def admin(message: discord.Message):
             content += f'{row[0]} has {row[1]} tracked snails. \n'
         embed = discord.Embed(title = 'Snailboard', description= content)
         await message.channel.send(embed = embed)
+
+        content = ''
+        for row in cur.execute('select author_mention, score from snipeboard order by score desc'):
+            content += f'{row[0]} has {row[1]} tracked snipes. \n'
+        embed = discord.Embed(title = 'Snipeboard', description= content)
+        await message.channel.send(embed = embed)
     
     if message.content.startswith('£toggle'):
         enabled = not enabled
@@ -315,6 +343,8 @@ async def admin(message: discord.Message):
             await message.channel.send('Enabling core features')
         else:
             await message.channel.send('Disabling the bots core features')
+
+    
     
     cur.close()
 
@@ -326,6 +356,10 @@ async def snail_gamble(interaction: discord.Interaction, link: str):
     """Tests your tweet against the current tweet queue. Careful: the bot slaps you if it isn't snail."""
     global queue
     link_search = re.search('twitter.com/\w*/status/(\w*)', link)
+    for role in interaction.user.roles:
+        if role.id == my_secrets.MOD_ID: 
+            await interaction.channel.send(f'Sorry {interaction.user.display_name}, but I don\'t serve the mods.')
+            return
     if (link_search):
         linkid = link_search.group(1)
     else:
@@ -335,11 +369,17 @@ async def snail_gamble(interaction: discord.Interaction, link: str):
     for i in range(len(queue)):
         if (queue[i][0] == linkid):
             await interaction.response.send_message('This link is snail, post at your own risk!', ephemeral = True)
+            await interaction.channel.send('Oh wow, looks like someone just managed to dodge a snail using /snail_gamble, guess you\'ll never find out who it was!')
             return
     await interaction.response.send_message('This link is not snail!',ephemeral= True)
+    await interaction.channel.send(f'{interaction.user.mention} just wanted to post this twitter link, but they risked a snail_gamble so now they cannot post it. I\'m taking care of it: https://{link_search.group(0)}')
+    queue.append([linkid, str(interaction.created_at), client.user.id, 1])
+    if (len(queue) > 1000):
+        queue.pop(0)
     await interaction.user.timeout(datetime.timedelta(minutes = 1), reason = 'Lost snail gamble!')
+    return
 
-
+me_dm = None
 experimental = True
 defcon = 1
 queue = []
@@ -347,4 +387,5 @@ mods = 0
 leaderboard = []
 enabled = True
 twitterfix = False
-client.run(secrets.AUTH)
+recent_snails_list = []
+client.run(my_secrets.AUTH)
