@@ -189,8 +189,8 @@ async def checkSnail(message: discord.Message):
                 await me_dm.send(f'something fuckie going on')
                 await me_dm.send(f'user: {message.author.name}, server: {message.guild.name}, channel: {message.channel.name}')
             if (sniper.id == message.author.id):
-                print('selfsnail, lol')
-                #return
+                #print('selfsnail, lol')
+                return
             temptime = datetime.datetime(2020,1,1)
             temptime += timestamp
             responses = [
