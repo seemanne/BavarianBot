@@ -103,8 +103,6 @@ async def on_message_delete(message: discord.Message):
 @client.event
 async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
     if isinstance(reaction.emoji, str): return
-    print(reaction.emoji.name)
-    await reaction.message.channel.send(f'<:{reaction.emoji.name}:{reaction.emoji.id}>')
     usable = True
     try:
         usable = reaction.emoji.is_usable()
