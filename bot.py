@@ -27,6 +27,7 @@ print('files imported succesfully')
 #print('created fresh imagehash database')
 #df.to_csv('images.csv', index = False)
 con = sqlite3.connect('chalkotheke.db')
+emoji_con = sqlite3.connect('emojis.db')
 #con = sqlite3.connect('newexample.db')
 
 
@@ -99,6 +100,29 @@ async def on_message_delete(message: discord.Message):
         if i == message.id:
             await message.channel.send(f'It looks like {message.author.mention} tried to delete their snail. Here is their message in its full glory: \n {message.content}')
     
+@client.event
+async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
+    if isinstance(reaction.emoji, str): return
+    print(reaction.emoji.name)
+    await reaction.message.channel.send(f'<:{reaction.emoji.name}:{reaction.emoji.id}>')
+    usable = True
+    try:
+        usable = reaction.emoji.is_usable()
+    except:
+        return
+    if not usable: return
+    emoji_cursor = emoji_con.cursor()
+    res = emoji_cursor.execute(f'select * from emojitable where emoji_id = {reaction.emoji.id}')
+    registered = True
+    if res.fetchone() == None: registered = False
+    if not registered:
+        emoji_cursor.execute(f'insert into emojitable values ({reaction.emoji.id}, 1, \'<:{reaction.emoji.name}:{reaction.emoji.id}>\')')
+    else:
+        res = emoji_cursor.execute(f'select * from emojitable where emoji_id = {reaction.emoji.id}')
+        emoji_cursor.execute(f'update emojitable set count = {res.fetchmany()[0][1] + 1} where emoji_id = {reaction.emoji.id}')
+    emoji_con.commit()
+
+
 async def mapStarrer(message: discord.Message):
     linksearch = re.search('//www.geoguessr.com/', message.content)
     rand = random.random()
@@ -312,6 +336,11 @@ async def admin(message: discord.Message):
         df.to_csv('tweets.csv', index = False)
 
     if message.content.startswith('£migrate'):
+        emoji_cursor = emoji_con.cursor()
+        emoji_cursor.execute('create table emojitable(emoji_id int, count int, emoji_text text)')
+        emoji_cursor.execute('create unique index idx_emoji_id on emojitable (emoji_id)')
+        await message.channel.send('Created emojirank')
+        emoji_con.commit()
         cur.execute('create table snipeboard(author_id int, score int, author_mention text)')
         await message.channel.send('Created snipeboard')
         cur.execute('create unique index idx_author_id on snipeboard (author_id)')
@@ -323,6 +352,14 @@ async def admin(message: discord.Message):
         df = pd.read_csv('tweets.csv')
         queue = df.values.tolist()
         await message.channel.send(f'Successfully imported files. Tweet log with {len(queue)} entries.')
+
+    if message.content.startswith('£emojirank'):
+        content = ''
+        emoji_cursor = emoji_con.cursor()
+        for row in emoji_cursor.execute('select emoji_text, count from emojitable order by count desc'):
+            content += f'{row[0]} has been used {row[1]} times. \n'
+        embed = discord.Embed(title = 'Emojirank', description= content)
+        await message.channel.send(embed = embed)        
 
     if message.content.startswith('£leaderboard'):
         content = ''
