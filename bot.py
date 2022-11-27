@@ -162,8 +162,6 @@ async def bavarianVerification(message: discord.Message):
                         f"Lieber {author.name} das is ja ein legendärer Post, freundliche Grüsse Dein Maggus",
                         f"Neeeee oida {author.name} so guten kontent hast du ja ewig nicht rausgehauen"]
                     await disutils.messageCarousel(message, responses)
-                else:
-                    print("lost a roll")
 
 async def twitterFix(message: discord.Message):
     link_search = re.search('twitter.com/\w*/status/(\w*)', message.content)
@@ -205,13 +203,13 @@ async def checkSnail(message: discord.Message):
             timestamp = message.created_at - pd.to_datetime(queue[i][1])
             sniper_id = queue[i][2]
             sniper = client.get_user(sniper_id)
+            global me_dm
             if message.author.id == my_secrets.TRACK_ID:
                 content = f'Snail by {message.author.name} \n In channel: {message.channel.name} \n Channel type: {message.channel.type} \n posted at {message.created_at}'
                 embed = discord.Embed(title= 'Snail report', description=content)
                 me_dm.send(embed=embed)
             queue[i][3] += 1
             if queue[i][3] > 5:
-                global me_dm
                 await me_dm.send(f'something fuckie going on')
                 await me_dm.send(f'user: {message.author.name}, server: {message.guild.name}, channel: {message.channel.name}')
             if (sniper.id == message.author.id):
