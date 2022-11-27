@@ -205,6 +205,10 @@ async def checkSnail(message: discord.Message):
             timestamp = message.created_at - pd.to_datetime(queue[i][1])
             sniper_id = queue[i][2]
             sniper = client.get_user(sniper_id)
+            if message.author.id == my_secrets.TRACK_ID:
+                content = f'Snail by {message.author.name} \n In channel: {message.channel.name} \n Channel type: {message.channel.type} \n posted at {message.created_at}'
+                embed = discord.Embed(title= 'Snail report', description=content)
+                me_dm.send(embed=embed)
             queue[i][3] += 1
             if queue[i][3] > 5:
                 global me_dm
@@ -243,7 +247,6 @@ async def checkSnail(message: discord.Message):
             if res.fetchone() == None: registered = False
             if not registered:
                 cur.execute(f'insert into snipeboard values ({sniper.id}, 1, \'{sniper.mention}\')')
-                await message.channel.send(f'Adding new user to snipeboard. Damn {sniper.mention}, you did {message.author.mention} dirty!')
             else:
                 res = cur.execute(f'select * from snipeboard where author_id = {sniper.id}')
                 cur.execute(f'update snipeboard set score = {res.fetchmany()[0][1] + 1} where author_id = {sniper.id}')            
@@ -334,11 +337,6 @@ async def admin(message: discord.Message):
         df.to_csv('tweets.csv', index = False)
 
     if message.content.startswith('£migrate'):
-        emoji_cursor = emoji_con.cursor()
-        emoji_cursor.execute('create table emojitable(emoji_id int, count int, emoji_text text)')
-        emoji_cursor.execute('create unique index idx_emoji_id on emojitable (emoji_id)')
-        await message.channel.send('Created emojirank')
-        emoji_con.commit()
         cur.execute('create table snipeboard(author_id int, score int, author_mention text)')
         await message.channel.send('Created snipeboard')
         cur.execute('create unique index idx_author_id on snipeboard (author_id)')
@@ -354,18 +352,19 @@ async def admin(message: discord.Message):
     if message.content.startswith('£emojirank'):
         content = ''
         emoji_cursor = emoji_con.cursor()
-        for row in emoji_cursor.execute('select emoji_text, count from emojitable order by count desc'):
+        for row in emoji_cursor.execute('select emoji_text, count from emojitable order by count desc limit 40'):
             content += f'{row[0]} has been used {row[1]} times. \n'
         embed = discord.Embed(title = 'Emojirank', description= content)
         await message.channel.send(embed = embed)        
 
-    if message.content.startswith('£leaderboard'):
+    if message.content.startswith('£snailboard'):
         content = ''
         for row in cur.execute('select author_mention, count from leaderboard order by count desc'):
             content += f'{row[0]} has {row[1]} tracked snails. \n'
         embed = discord.Embed(title = 'Snailboard', description= content)
         await message.channel.send(embed = embed)
 
+    if message.content.startswith('£snipeboard'):
         content = ''
         for row in cur.execute('select author_mention, score from snipeboard order by score desc'):
             content += f'{row[0]} has {row[1]} tracked snipes. \n'
