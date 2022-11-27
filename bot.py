@@ -59,8 +59,8 @@ async def on_ready():
 async def on_message(message: discord.Message):
 
     if message.author.bot:
-        #print('bot account')
-        return
+        print('bot account')
+        #return
     if message.author == client.user:
         return
     if message.content.startswith('£'):
@@ -208,13 +208,21 @@ async def checkSnail(message: discord.Message):
                 content = f'Snail by {message.author.name} \n In channel: {message.channel.name} \n Channel type: {message.channel.type} \n posted at {message.created_at}'
                 embed = discord.Embed(title= 'Snail report', description=content)
                 await me_dm.send(embed=embed)
-            queue[i][3] += 1
-            if queue[i][3] > 5:
+            if str(message.channel.type) == 'private_thread':
+                await me_dm.send(f'Snailbot found snail in thread {message.channel.name} by f{message.author.name}')
+                responses = [
+                    f'You should have better things to do than snailing in this channel {message.author.mention}!',
+                    f'{message.author.mention} its time to go outside and touch some grass!',
+                    f'Stop, lol!',
+                    f'Find another hobby than snailing around {message.author.mention}.'
+                ]
+            if queue[i][3] > 3:
                 await me_dm.send(f'something fuckie going on')
                 await me_dm.send(f'user: {message.author.name}, server: {message.guild.name}, channel: {message.channel.name}')
             if (sniper.id == message.author.id):
-                #print('selfsnail, lol')
-                return
+                print('selfsnail, lol')
+                #return
+            queue[i][3] += 1
             temptime = datetime.datetime(2020,1,1)
             temptime += timestamp
             responses = [
