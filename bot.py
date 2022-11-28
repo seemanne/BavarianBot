@@ -207,7 +207,7 @@ async def checkSnail(message: discord.Message):
             if message.author.id == my_secrets.TRACK_ID:
                 content = f'Snail by {message.author.name} \n In channel: {message.channel.name} \n Channel type: {message.channel.type} \n posted at {message.created_at}'
                 embed = discord.Embed(title= 'Snail report', description=content)
-                me_dm.send(embed=embed)
+                await me_dm.send(embed=embed)
             queue[i][3] += 1
             if queue[i][3] > 5:
                 await me_dm.send(f'something fuckie going on')
