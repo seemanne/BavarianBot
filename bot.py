@@ -59,8 +59,8 @@ async def on_ready():
 async def on_message(message: discord.Message):
 
     if message.author.bot:
-        print('bot account')
-        #return
+        #print('bot account')
+        return
     if message.author == client.user:
         return
     if message.content.startswith('£'):
@@ -348,7 +348,6 @@ async def admin(message: discord.Message):
         cur.execute('create unique index idx_author_id on snipeboard (author_id)')
         con.commit()
         await message.channel.send('Created index column on variable author_id')
-
 
     if message.content.startswith('£import'):
         df = pd.read_csv('tweets.csv')
