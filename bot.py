@@ -209,7 +209,7 @@ async def checkSnail(message: discord.Message):
                 embed = discord.Embed(title= 'Snail report', description=content)
                 await me_dm.send(embed=embed)
             if str(message.channel.type) == 'private_thread':
-                await me_dm.send(f'Snailbot found snail in thread {message.channel.name} by f{message.author.name}')
+                #await me_dm.send(f'Snailbot found snail in thread {message.channel.name} by f{message.author.name}')
                 responses = [
                     f'You should have better things to do than snailing in this channel {message.author.mention}!',
                     f'{message.author.mention} its time to go outside and touch some grass!',
@@ -411,12 +411,44 @@ async def snail_gamble(interaction: discord.Interaction, link: str):
             await interaction.channel.send('Oh wow, looks like someone just managed to dodge a snail using /snail_gamble, guess you\'ll never find out who it was!')
             return
     await interaction.response.send_message('This link is not snail!',ephemeral= True)
-    await interaction.channel.send(f'{interaction.user.mention} just wanted to post this twitter link, but they risked a snail_gamble so now they cannot post it. I\'m taking care of it: https://{link_search.group(0)}')
+    await interaction.channel.send(f'Someone just wanted to post this twitter link, but they risked a snail_gamble so now they cannot post it. I\'m taking care of it: https://{link_search.group(0)}')
     queue.append([linkid, str(interaction.created_at), client.user.id, 1])
     if (len(queue) > 1000):
         queue.pop(0)
     await interaction.user.timeout(datetime.timedelta(minutes = 1), reason = 'Lost snail gamble!')
     return
+
+@client.tree.command()
+@app_commands.describe(
+    link='The snail link you want to post'
+)
+async def snail_post(interaction: discord.Interaction, link: str):
+    """Reposts a tweet which is snail. Will ban you from use if you abuse it."""
+    global queue
+    global ban_list
+    for i in ban_list:
+        if i == interaction.user.id:
+            await interaction.response.send_message(f'Sorry, {interaction.user.display_name} but you are banned from snail_post!')
+            return
+    link_search = re.search('twitter.com/\w*/status/(\w*)', link)
+    if (link_search):
+        linkid = int(link_search.group(1))
+    else:
+        await interaction.response.send_message(f'Sorry, but this is not a valid twitter link!', ephemeral= True)
+        return
+    for i in range(len(queue)):
+        if (queue[i][0] == linkid):
+            await interaction.channel.send(f'Repost by {interaction.user.mention}: {link}')
+            await interaction.response.send_message('Done!')
+            return
+    await interaction.response.send_message(f'Sorry, {interaction.user.mention} but that is not a known twitter link, you have been banned from snail_post')
+    embed = discord.Embed(title= 'User mutation', description= f'User: {interaction.user.mention} \n Mutation: Banned from using /snail_post \n Reason: Non-snail link')
+    await client.get_channel(my_secrets.LOG_CHANNEL).send(embed=embed)
+    ban_list.append(interaction.user.id)
+    return
+
+
+
 
 me_dm = None
 experimental = True
@@ -427,4 +459,5 @@ leaderboard = []
 enabled = True
 twitterfix = False
 recent_snails_list = []
+ban_list=[]
 client.run(my_secrets.AUTH)
