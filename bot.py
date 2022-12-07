@@ -447,8 +447,54 @@ async def snail_post(interaction: discord.Interaction, link: str):
     ban_list.append(interaction.user.id)
     return
 
+@client.tree.command()
+@app_commands.describe(
+    timestamp='Your timestamp in the ms format'
+)
+async def timesync(interaction: discord.Interaction, timestamp: str):
+    """Add your time to the current sync table. Can also update your time."""
+    if len(timestamp) > 5:
+        await interaction.response.send_message('Sorry but that string is too long!')
+        return
+    global timesync_table
+    minutes = int(timestamp[:-2])
+    seconds = int(timestamp[-2:])
+    hours = 0
+    while minutes > 60:
+        minutes -= 60
+        hours += 1
 
+    user_timestamp = datetime.datetime.combine(datetime.date.today(), datetime.time(hour= hours, minute=minutes, second=seconds))
+    interaction_timestamp = interaction.created_at
+    user_id = interaction.user.id
 
+    timesync_table[str(user_id)] = [user_timestamp, interaction_timestamp, interaction.user.mention]
+    await interaction.response.send_message('Added your timestamp to the sync table!')
+    
+    print(user_timestamp)
+    print(interaction.created_at)
+    return
+
+@client.tree.command()
+async def timesynctable(interaction: discord.Interaction):
+    """Show the current sync table"""
+    global timesync_table
+    interaction_timestamp = interaction.created_at
+    content = ''
+    
+    for key in timesync_table.keys():
+        content += f'{disutils.get_time_in_fifa_format(timesync_table[key][0] + (interaction_timestamp - timesync_table[key][1]))} by {timesync_table[key][2]} \n'
+    
+    embed = discord.Embed(title= 'Current tracked timestamps', description=content)
+    await interaction.channel.send(embed=embed)
+    await interaction.response.send_message('Done!')
+    return
+
+@client.tree.command()
+async def timesyncreset(interaction: discord.Interaction):
+    global timesync_table
+    timesync_table = {}
+    await interaction.response.send_message('Cleared table!')
 
 me_dm = None
 experimental = True
@@ -460,4 +506,5 @@ enabled = True
 twitterfix = False
 recent_snails_list = []
 ban_list=[]
+timesync_table = {}
 client.run(my_secrets.AUTH)
