@@ -143,9 +143,16 @@ async def bavarianVerification(message: discord.Message):
         if rolesPinged[i].name == bavarianid:
             illegal = True
             for j in range(len(authorRoles)):
-                if (authorRoles[j] == rolesPinged[i]):
+                if (authorRoles[j].id == rolesPinged[i].id):
                     illegal = False
             if(illegal):
+                if message.author.id == my_secrets.MOOSER_ID & len(message.attachments) > 0 & random.random() > 0.75:
+                    responses = [
+                        'That is the most adorable thing I\'ve ever seen',
+                        'Moose, this is cute as hell!',
+                        'The vibe of this picture is so high john will have to... wait what?',
+                        'Oh man, she\'s just like gammbus',
+                    ]
                 if (defcon == 1):
                     slaptime = datetime.timedelta(minutes=1)
                     await message.channel.send(f"{author.mention} <:ir_discussion_bain:918147188499021935>")
@@ -492,9 +499,24 @@ async def timesynctable(interaction: discord.Interaction):
 
 @client.tree.command()
 async def timesyncreset(interaction: discord.Interaction):
+    allowed = False
+    for i in interaction.user.roles:
+        if i.name == bavarianid:
+            allowed = True
+    if interaction.user.id == my_secrets.MY_ACC_ID:
+        allowed = True
+    if not allowed:
+        await interaction.response.send_message('Sorry, but you cannot do this.')
+        return
     global timesync_table
     timesync_table = {}
     await interaction.response.send_message('Cleared table!')
+    return
+
+@client.tree.command()
+async def bettzeit(interaction: discord.Interaction):
+    await interaction.response.send_message('This feature is not ready yet, come back later')
+    return
 
 me_dm = None
 experimental = True
