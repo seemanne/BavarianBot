@@ -143,9 +143,16 @@ async def bavarianVerification(message: discord.Message):
         if rolesPinged[i].name == bavarianid:
             illegal = True
             for j in range(len(authorRoles)):
-                if (authorRoles[j] == rolesPinged[i]):
+                if (authorRoles[j].id == rolesPinged[i].id):
                     illegal = False
             if(illegal):
+                if message.author.id == my_secrets.MOOSER_ID & len(message.attachments) > 0 & random.random() > 0.75:
+                    responses = [
+                        'That is the most adorable thing I\'ve ever seen',
+                        'Moose, this is cute as hell!',
+                        'The vibe of this picture is so high john will have to... wait what?',
+                        'Oh man, she\'s just like gammbus',
+                    ]
                 if (defcon == 1):
                     slaptime = datetime.timedelta(minutes=1)
                     await message.channel.send(f"{author.mention} <:ir_discussion_bain:918147188499021935>")
@@ -208,13 +215,21 @@ async def checkSnail(message: discord.Message):
                 content = f'Snail by {message.author.name} \n In channel: {message.channel.name} \n Channel type: {message.channel.type} \n posted at {message.created_at}'
                 embed = discord.Embed(title= 'Snail report', description=content)
                 await me_dm.send(embed=embed)
-            queue[i][3] += 1
-            if queue[i][3] > 5:
+            if str(message.channel.type) == 'private_thread':
+                #await me_dm.send(f'Snailbot found snail in thread {message.channel.name} by f{message.author.name}')
+                responses = [
+                    f'You should have better things to do than snailing in this channel {message.author.mention}!',
+                    f'{message.author.mention} its time to go outside and touch some grass!',
+                    f'Stop, lol!',
+                    f'Find another hobby than snailing around {message.author.mention}.'
+                ]
+            if queue[i][3] > 3:
                 await me_dm.send(f'something fuckie going on')
                 await me_dm.send(f'user: {message.author.name}, server: {message.guild.name}, channel: {message.channel.name}')
             if (sniper.id == message.author.id):
-                #print('selfsnail, lol')
-                return
+                print('selfsnail, lol')
+                #return
+            queue[i][3] += 1
             temptime = datetime.datetime(2020,1,1)
             temptime += timestamp
             responses = [
@@ -341,7 +356,6 @@ async def admin(message: discord.Message):
         con.commit()
         await message.channel.send('Created index column on variable author_id')
 
-
     if message.content.startswith('£import'):
         df = pd.read_csv('tweets.csv')
         queue = df.values.tolist()
@@ -404,11 +418,104 @@ async def snail_gamble(interaction: discord.Interaction, link: str):
             await interaction.channel.send('Oh wow, looks like someone just managed to dodge a snail using /snail_gamble, guess you\'ll never find out who it was!')
             return
     await interaction.response.send_message('This link is not snail!',ephemeral= True)
-    await interaction.channel.send(f'{interaction.user.mention} just wanted to post this twitter link, but they risked a snail_gamble so now they cannot post it. I\'m taking care of it: https://{link_search.group(0)}')
+    await interaction.channel.send(f'Someone just wanted to post this twitter link, but they risked a snail_gamble so now they cannot post it. I\'m taking care of it: https://{link_search.group(0)}')
     queue.append([linkid, str(interaction.created_at), client.user.id, 1])
     if (len(queue) > 1000):
         queue.pop(0)
     await interaction.user.timeout(datetime.timedelta(minutes = 1), reason = 'Lost snail gamble!')
+    return
+
+@client.tree.command()
+@app_commands.describe(
+    link='The snail link you want to post'
+)
+async def snail_post(interaction: discord.Interaction, link: str):
+    """Reposts a tweet which is snail. Will ban you from use if you abuse it."""
+    global queue
+    global ban_list
+    for i in ban_list:
+        if i == interaction.user.id:
+            await interaction.response.send_message(f'Sorry, {interaction.user.display_name} but you are banned from snail_post!')
+            return
+    link_search = re.search('twitter.com/\w*/status/(\w*)', link)
+    if (link_search):
+        linkid = int(link_search.group(1))
+    else:
+        await interaction.response.send_message(f'Sorry, but this is not a valid twitter link!', ephemeral= True)
+        return
+    for i in range(len(queue)):
+        if (queue[i][0] == linkid):
+            await interaction.channel.send(f'Repost by {interaction.user.mention}: {link}')
+            await interaction.response.send_message('Done!')
+            return
+    await interaction.response.send_message(f'Sorry, {interaction.user.mention} but that is not a known twitter link, you have been banned from snail_post')
+    embed = discord.Embed(title= 'User mutation', description= f'User: {interaction.user.mention} \n Mutation: Banned from using /snail_post \n Reason: Non-snail link')
+    await client.get_channel(my_secrets.LOG_CHANNEL).send(embed=embed)
+    ban_list.append(interaction.user.id)
+    return
+
+@client.tree.command()
+@app_commands.describe(
+    timestamp='Your timestamp in the ms format'
+)
+async def timesync(interaction: discord.Interaction, timestamp: str):
+    """Add your time to the current sync table. Can also update your time."""
+    if len(timestamp) > 5:
+        await interaction.response.send_message('Sorry but that string is too long!')
+        return
+    global timesync_table
+    minutes = int(timestamp[:-2])
+    seconds = int(timestamp[-2:])
+    hours = 0
+    while minutes > 60:
+        minutes -= 60
+        hours += 1
+
+    user_timestamp = datetime.datetime.combine(datetime.date.today(), datetime.time(hour= hours, minute=minutes, second=seconds))
+    interaction_timestamp = interaction.created_at
+    user_id = interaction.user.id
+
+    timesync_table[str(user_id)] = [user_timestamp, interaction_timestamp, interaction.user.mention]
+    await interaction.response.send_message('Added your timestamp to the sync table!')
+    
+    print(user_timestamp)
+    print(interaction.created_at)
+    return
+
+@client.tree.command()
+async def timesynctable(interaction: discord.Interaction):
+    """Show the current sync table"""
+    global timesync_table
+    interaction_timestamp = interaction.created_at
+    content = ''
+    
+    for key in timesync_table.keys():
+        content += f'{disutils.get_time_in_fifa_format(timesync_table[key][0] + (interaction_timestamp - timesync_table[key][1]))} by {timesync_table[key][2]} \n'
+    
+    embed = discord.Embed(title= 'Current tracked timestamps', description=content)
+    await interaction.channel.send(embed=embed)
+    await interaction.response.send_message('Done!')
+    return
+
+@client.tree.command()
+async def timesyncreset(interaction: discord.Interaction):
+    allowed = False
+    for i in interaction.user.roles:
+        if i.name == bavarianid:
+            allowed = True
+    if interaction.user.id == my_secrets.MY_ACC_ID:
+        allowed = True
+    if not allowed:
+        await interaction.response.send_message('Sorry, but you cannot do this.')
+        return
+    global timesync_table
+    timesync_table = {}
+    await interaction.response.send_message('Cleared table!')
+    return
+
+@client.tree.command()
+async def bettzeit(interaction: discord.Interaction):
+    await interaction.response.send_message('This feature is not ready yet, come back later')
     return
 
 me_dm = None
@@ -420,4 +527,6 @@ leaderboard = []
 enabled = True
 twitterfix = False
 recent_snails_list = []
+ban_list=[]
+timesync_table = {}
 client.run(my_secrets.AUTH)
