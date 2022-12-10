@@ -1,6 +1,7 @@
 import discord
 import pandas as pd
 import random
+import datetime
 
 async def display_table(message: discord.Message, table: pd.DataFrame, title = 'Unnamed embed'):
     content = ''
@@ -43,4 +44,8 @@ def numeral_adverb(occurence_count: int):
     if occurence_count == 1: return 'once'
     if occurence_count == 2: return 'twice'
     return f'{occurence_count} times'
+
+def get_time_in_fifa_format(nowtime: datetime.datetime):
+
+    return str(nowtime.hour*60 + nowtime.minute) + ':' + str(nowtime.second)
 
