@@ -7,6 +7,9 @@ import pandas as pd
 import sqlite3
 import time
 import my_secrets
+import io
+import aiohttp
+import matplotlib.pyplot as plt
 from discord import app_commands
 
 #import giffer
@@ -396,6 +399,28 @@ async def admin(message: discord.Message):
 
 @client.tree.command()
 @app_commands.describe(
+    count='The number of emojis you want to plot'
+)
+async def snailplot(interaction:discord.Interaction, count: int):
+    """Plot the current rankings of the emojis"""
+    count = min(count, 40)
+    emoji_cursor = emoji_con.cursor()
+    emoji_names, emoji_count = [], []
+    for row in emoji_cursor.execute(f'select emoji_text, count from emojitable order by count desc limit {count}'):
+            emoji_names.append(re.search('<:(.*):', row[0]).group(1))
+            emoji_count.append(row[1])
+    emoji_cursor.close()
+    plt.bar(x = emoji_names, height=emoji_count)
+    buffer = io.BytesIO()
+    plt.xticks(rotation = 'vertical')
+    plt.savefig(buffer, format='png', bbox_inches = 'tight')
+    buffer.seek(0)
+    await interaction.response.send_message(file=discord.File(buffer, 'cool_plot.png'))
+    buffer.close()
+    plt.close()
+
+@client.tree.command()
+@app_commands.describe(
     link='The twitter link you want to check'
 )
 async def snail_gamble(interaction: discord.Interaction, link: str):
@@ -445,8 +470,7 @@ async def snail_post(interaction: discord.Interaction, link: str):
         return
     for i in range(len(queue)):
         if (queue[i][0] == linkid):
-            await interaction.channel.send(f'Repost by {interaction.user.mention}: {link}')
-            await interaction.response.send_message('Done!')
+            await interaction.response.send_message(f'Repost by {interaction.user.mention}: {link}')
             return
     await interaction.response.send_message(f'Sorry, {interaction.user.mention} but that is not a known twitter link, you have been banned from snail_post')
     embed = discord.Embed(title= 'User mutation', description= f'User: {interaction.user.mention} \n Mutation: Banned from using /snail_post \n Reason: Non-snail link')
@@ -477,9 +501,6 @@ async def timesync(interaction: discord.Interaction, timestamp: str):
 
     timesync_table[str(user_id)] = [user_timestamp, interaction_timestamp, interaction.user.mention]
     await interaction.response.send_message('Added your timestamp to the sync table!')
-    
-    print(user_timestamp)
-    print(interaction.created_at)
     return
 
 @client.tree.command()
@@ -493,8 +514,7 @@ async def timesynctable(interaction: discord.Interaction):
         content += f'{disutils.get_time_in_fifa_format(timesync_table[key][0] + (interaction_timestamp - timesync_table[key][1]))} by {timesync_table[key][2]} \n'
     
     embed = discord.Embed(title= 'Current tracked timestamps', description=content)
-    await interaction.channel.send(embed=embed)
-    await interaction.response.send_message('Done!')
+    await interaction.response.send_message(embed=embed)
     return
 
 @client.tree.command()
@@ -517,6 +537,18 @@ async def timesyncreset(interaction: discord.Interaction):
 async def bettzeit(interaction: discord.Interaction):
     await interaction.response.send_message('This feature is not ready yet, come back later')
     return
+
+@client.tree.command()
+async def fancyvibecheck(interaction: discord.Interaction):
+    return
+    async with aiohttp.ClientSession() as session:
+        async with session.get('http://emif36.local:8000') as response:
+            print("Status:", response.status)
+            print("Content-type:", response.headers['content-type'])
+
+            html = await response.text()
+            print("Body:", html)
+
 
 me_dm = None
 experimental = True
