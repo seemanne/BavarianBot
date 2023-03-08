@@ -233,8 +233,8 @@ async def checkSnail(message: discord.Message):
             temptime = datetime.datetime(2020,1,1)
             temptime += timestamp
             timestring = []
-            if temptime.day > 0:
-                timestring.append(f"{temptime.day} day{'s' if temptime.day != 1 else ''}")
+            if (temptime.day-1) > 0:
+                timestring.append(f"{temptime.day-1} day{'s' if (temptime.day-1) != 1 else ''}")
             if temptime.hour > 0:
                 timestring.append(f"{temptime.hour} hour{'s' if temptime.hour != 1 else ''}")
             if temptime.minute > 0:
