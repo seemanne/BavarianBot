@@ -232,12 +232,21 @@ async def checkSnail(message: discord.Message):
             queue[i][3] += 1
             temptime = datetime.datetime(2020,1,1)
             temptime += timestamp
+            timestring = []
+            if days > 0:
+                timestring.append(f"{temptime.day} day{'s' if temptime.day != 1 else ''}")
+            if hours > 0:
+                timestring.append(f"{temptime.hour} hour{'s' if temptime.hour != 1 else ''}")
+            if minutes > 0:
+                timestring.append(f"{temptime.minute} minute{'s' if temptime.minute != 1 else ''}")
+            if seconds > 0:
+                timestring.append(f"{temptime.second} second{'s' if temptime.second != 1 else ''}")
             responses = [
-                f'Sorry, {message.author.name}, but that is the biggest snail I\'ve ever seen! It was first posted by {sniper.display_name} {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds ago and has since been posted {disutils.numeral_adverb(queue[i][3]- 1)}.',
-                f'Lol {message.author.name}, you\'re such a snail, {sniper.display_name} already posted that {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds ago',
+                f'Sorry, {message.author.name}, but that is the biggest snail I\'ve ever seen! It was first posted by {sniper.display_name} {" ".join(timestring) or "0 seconds"} ago and has since been posted {disutils.numeral_adverb(queue[i][3]- 1)}.',
+                f'Lol {message.author.name}, you\'re such a snail, {sniper.display_name} already posted that {" ".join(timestring) or "0 seconds"} ago',
                 f'{message.author.name}, your snailing is so extreme I won\'t bother to check the time. This link has now been posted {disutils.numeral_adverb(queue[i][3])}!',
-                f'Hey, {message.author.name}, if you were to scroll up instead of piping your twitterfeed straight into discord you would see the same post just {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds earlier',
-                f'I regret to inform you, {message.author.name}, but it has been {temptime.hour} hours {temptime.minute} minutes and {temptime.second} seconds since this was first posted.'
+                f'Hey, {message.author.name}, if you were to scroll up instead of piping your twitterfeed straight into discord you would see the same post just {" ".join(timestring) or "0 seconds"} earlier',
+                f'I regret to inform you, {message.author.name}, but it has been {" ".join(timestring) or "0 seconds"} since this was first posted.'
             ]
             await disutils.messageCarousel(message, responses)
 
