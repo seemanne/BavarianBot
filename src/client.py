@@ -131,7 +131,10 @@ class Maggus(discord.Client):
     async def list_tags(self, message: discord.Message):
 
         tag_name = message.content.strip().lstrip("$tag list ")
-        embed = src.crud.list_tags(tag_name, self.sql_engine)
+        if tag_name == "":
+            embed = src.crud.list_all_tags(self.sql_engine)
+        else:
+            embed = src.crud.list_tags(tag_name, self.sql_engine)
         await message.reply(embed = embed)
 
     def post_tag(self, message: discord.Message):

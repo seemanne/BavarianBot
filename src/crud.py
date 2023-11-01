@@ -1,8 +1,8 @@
 import re
 import sqlalchemy
 import discord
-from sqlalchemy import select
-from sqlalchemy.sql import func
+from sqlalchemy import select, desc
+from sqlalchemy.sql import func, text
 from src.orm import Tag, Config
 
 def add_tag(tag_data: dict, engine: sqlalchemy.Engine):
@@ -30,6 +30,16 @@ def list_tags(tag_name: str, engine: sqlalchemy.Engine):
         for row in conn.execute(query):
             message += f"{row[0]} | {row[1]}\n"
     return discord.Embed(title=f'Found the following tags for "{tag_name}":', description=message)
+
+def list_all_tags(engine: sqlalchemy.Engine):
+
+    message = ""
+    with engine.connect() as conn:
+
+        query = select(Tag.name, func.count("*").label("count")).group_by(Tag.name).order_by(desc(text("count")))
+        for row in conn.execute(query):
+            message += f"'{row[0]}' : {row[1]} tags\n"
+    return discord.Embed(title="Available tags", description=message)
 
 def get_tag(content: str, engine: sqlalchemy.Engine):
 
