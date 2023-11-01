@@ -50,6 +50,7 @@ class TagCreationFlow(MessageFlow):
         super().__init__(message, "TagCreation")
         self.next_creation_step = self.step_1
         self.sql_engine = sql_engine
+        self.loop.create_task(message.reply("Starting interactive tag creation. You can cancel anytime using $cancel. \nPlease send a message containing the link to the image."))
 
     def step_1(self, message: discord.Message):
 
