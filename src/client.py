@@ -83,19 +83,29 @@ class Maggus(discord.Client):
 
         return
     
-    def add_tag_flow(self, message: discord.Message):
+    def _check_tag_abort(self, message:discord.Message):
 
         abort_id = None
         for id, hook in self.message_hooks.items():
             if hook.owner_id == message.author.id:
-                message.reply("Aborting previous tag creation flow")
+                message.reply("Aborting previous tag flow")
                 abort_id = id
         
         if abort_id:
             self.message_hooks.pop(abort_id)
-            return
+        return
+    
+    def add_tag_flow(self, message: discord.Message):
+
+        self._check_tag_abort(message)
         
-        self.message_hooks[message.id] = src.tagger.TagCreationFlow(message=message)
+        self.message_hooks[message.id] = src.tagger.TagCreationFlow(message=message, sql_engine=self.sql_engine)
+
+    def alter_tag_flow(self, message: discord.Message):
+
+        self._check_tag_abort(message)
+
+        self.message_hooks[message.id] = src.tagger.TagAlterationFlow(message=message)
     
     def deactivate(self):
 
@@ -114,8 +124,6 @@ class Maggus(discord.Client):
                 if res != 0:
                     cleanup_ids.append(id)
                     self.log.info(hook.data)
-                if res == 1:
-                    src.crud.add_tag(hook.data, self.sql_engine)
 
         for id in cleanup_ids:
             self.message_hooks.pop(id)
@@ -132,22 +140,6 @@ class Maggus(discord.Client):
         tag = src.crud.get_tag(content, self.sql_engine)
 
         self.loop.create_task(message.reply(tag))
-
-
-
-
-
-def add_bs(engine: sqlalchemy.Engine):
-
-    query = sqlalchemy.insert(src.orm.Config).values(key="test", value="value")
-
-    with engine.connect() as conn:
-        conn.execute(query)
-        conn.commit()
-    
-    print("done")
-
-
 
 #client = Maggus(intents=discord.Intents.all())
 #client.run(auth.AUTH)
