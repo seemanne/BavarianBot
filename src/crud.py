@@ -41,4 +41,4 @@ def get_tag(content: str, engine: sqlalchemy.Engine):
             res = conn.execute(query).first()[0]
             return res
     
-    return f"Failed to find tag with name:{matchli.group(1)} id:{matchli.group(2)}"
+    return f"Failed to find tag with name: {matchli.group(1)}, id: {matchli.group(2)}"
