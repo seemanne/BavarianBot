@@ -16,6 +16,7 @@ class Maggus(discord.Client):
         super().__init__(intents=intents, **options)
         self.tree = app_commands.CommandTree(self)
         self.log = log
+        self.is_dev = src.auth.DEV
 
         self.sql_engine = sqlalchemy.create_engine("sqlite:///chalkotheke.db")
 
@@ -47,6 +48,14 @@ class Maggus(discord.Client):
 
         self.log.exception('Ignoring exception in %s', event_method)
 
+    def debug(self, message:discord.Message, response: str):
+
+        if self.is_dev:
+            self.loop.create_task(message.reply(response))
+        else:
+            self.log.debug(message)
+
+        return
 
     def cinephile(self, message):
 
@@ -62,7 +71,7 @@ class Maggus(discord.Client):
             self.loop.create_task(message.reply("Sorry, but that tag was not recognized. Try listing tags with $tag list or using $tag help"))
             return
         
-        self.loop.create_task(message.reply(f"tag: {parsed}"))
+        self.debug(message, f"tag: {parsed}")
         
         match parsed:
             case "help": src.tagger.help(message)
