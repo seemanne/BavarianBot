@@ -18,7 +18,7 @@ class Maggus(discord.Client):
         self.log = log
         self.is_dev = src.auth.DEV
 
-        self.sql_engine = sqlalchemy.create_engine("sqlite:///chalkotheke.db")
+        self.sql_engine = sqlalchemy.create_engine("sqlite:///db/chalkotheke.db")
 
         self.activated = True
 

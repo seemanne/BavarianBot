@@ -2,13 +2,13 @@ version: '0.1.0'
 
 services:
   maggus:
-    image: maggus:latest
+    image: bavarianbot:latest
     env_file: .dev.env
     restart: always
     ports:
       - "8000:80"
     volumes:
-      - ./volumes/db:/db:Z
+      - ./volumes/db:/code/db
 
 networks:
   default:
