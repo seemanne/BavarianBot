@@ -3,7 +3,7 @@ version: '0.1.0'
 services:
   maggus:
     image: bavarianbot:latest
-    env_file: .dev.env
+    env_file: .env
     restart: always
     ports:
       - "8000:80"
