@@ -8,7 +8,7 @@ services:
     ports:
       - "8000:80"
     volumes:
-      - ./volumes/db:/code/db
+      - ./volumes/db:/code/db:Z
 
 networks:
   default:
