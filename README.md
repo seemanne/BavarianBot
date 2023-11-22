@@ -22,3 +22,13 @@ Uses regex to extract authors and year of a paper mentioned in the message and t
 **wikiCrawl**
 
 Uses a wikipedia-api to obtain the summary of the wikipedia article of a given term
+
+
+# Deploy
+
+podman build -f ./CONTAINERFILE -t bavarianbot:latest .
+
+
+podman run --env-file=./.dev.env -p 8000:80 bavarianbot:latest
+podman run --env-file=./.prod.env -p 8000:80 bavarianbot:latest
+
