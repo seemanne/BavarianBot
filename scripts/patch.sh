@@ -11,7 +11,6 @@ curl -X 'PUT' \
   -H 'accept: application/json'
 
 podman-compose -f podman-compose.yml down
-git pull
 podman build -f ./CONTAINERFILE -t bavarianbot:latest .
 nohup podman-compose -f podman-compose.yml up &
 
