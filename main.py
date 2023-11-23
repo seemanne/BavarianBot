@@ -81,6 +81,13 @@ async def send_clown(channel: int, message: str):
     return {"message": "Poasted successfully"}
 
 
+@app.get("/data")
+async def get_data(channel: int, n: int):
+
+    data = await client.get_history(channel, n)
+    return {"data" : data}
+
+
 
 def log_callback(fut, coroutine_name, additional_message=""):
     try:
