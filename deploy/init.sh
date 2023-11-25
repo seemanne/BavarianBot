@@ -1,4 +1,5 @@
 set -e
+cat .env
 podman build -f ./CONTAINERFILE -t bavarianbot:latest .
 mkdir volumes
 mkdir volumes/db
