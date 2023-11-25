@@ -5,13 +5,7 @@ from fastapi import FastAPI
 import discord
 import src.client
 import src.orm
-
-from pydantic import BaseModel
-
-
-class Status(BaseModel):
-    is_ready: bool
-    is_closed: bool
+from src.models import Status
 
 LOG = logging.getLogger("uvicorn")
 client = src.client.Maggus(intents=discord.Intents.all(), log=LOG)
@@ -85,6 +79,13 @@ async def send_clown(channel: int, message: str):
     chan = client.get_channel(channel)
     await chan.send(message)
     return {"message": "Poasted successfully"}
+
+
+@app.get("/data")
+async def get_data(channel: int, n: int):
+
+    data = await client.get_history(channel, n)
+    return {"data" : data}
 
 
 
