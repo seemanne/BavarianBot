@@ -37,7 +37,7 @@ async def start_fishing(interaction: discord.Interaction):
 @discord.app_commands.command(name="reel", description="Reel in your fish")
 async def reel_fish(interaction: discord.Interaction):
 
-    is_there, timestamp = interaction.client.pond.get_fisher(interaction.user.name)
+    is_there, timestamp = interaction.client.pond.pop_fisher(interaction.user.name)
     if not is_there:
         await interaction.response.send_message(f"Sorry, {interaction.user.name}, it looks like you're not fishing. Why not sit down and /fish ?")
         return

@@ -107,6 +107,10 @@ class Pond:
     def get_fisher(self, name: str):
 
         return (name in self.fishers, self.fishers.get(name, None))
+    
+    def pop_fisher(self, name: str):
+
+        return (name in self.fishers, self.fishers.pop(name, None))
 
     def add_fisher(self, name: str, time: datetime.datetime):
 
