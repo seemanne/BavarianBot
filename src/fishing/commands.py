@@ -49,4 +49,5 @@ async def reel_fish(interaction: discord.Interaction):
         return
     
     fish = interaction.client.pond.get_fish()
+    interaction.client.pond.refill_fish()
     await interaction.response.send_message(fish.get_catch_message(interaction.user.mention))

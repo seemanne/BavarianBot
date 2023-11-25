@@ -94,6 +94,11 @@ class Pond:
         self.fishers = {}
         self.ecosystem_task = None
 
+    def refill_fish(self):
+
+        if len(self.fishes) < POND_SIZE and datetime.datetime.now().hour < 23 and datetime.datetime.now().hour > 6:
+            self.fishes.put(Fish())
+
     def populate_pond_and_start_ecosystem(self):
 
         self._populate()
