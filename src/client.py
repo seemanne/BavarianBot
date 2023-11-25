@@ -15,6 +15,7 @@ import src.models
 import src.command_tree
 import src.snail
 import src.datastructures
+import src.fishing.pond
 
 class Maggus(discord.Client):
     def __init__(self, *, intents: discord.Intents, log: logging.Logger, **options):
@@ -30,7 +31,7 @@ class Maggus(discord.Client):
 
         self.message_hooks : dict[int, src.tagger.TagCreationFlow] = {}
 
-        self.fishing_dict = {}
+        self.pond = src.fishing.pond.Pond()
         self.snail_cache = src.datastructures.LRUCache(1000)
         self.snail_votes = {}
 
@@ -55,6 +56,9 @@ class Maggus(discord.Client):
         self.tree.copy_global_to(guild=discord.Object(id=guild_id))
         await self.tree.sync(guild=discord.Object(id=guild_id))
         self.log.info("COMMAND TREE SYNCED SUCCESSFULLY")
+
+        self.pond.populate_pond_and_start_ecosystem()
+        self.log.info("Started pond ecosystem")
         # This copies the global commands over to your guild.
         #self.tree.copy_global_to(guild=my_secrets.MY_GUILD)
         #await self.tree.sync(guild=my_secrets.MY_GUILD)

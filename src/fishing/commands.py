@@ -15,23 +15,38 @@ async def start_fishing(interaction: discord.Interaction):
         seconds = random.randint(1, 60)
     else:
         seconds = random.randint(1, 3600)
-    interaction.client.fishing_dict[interaction.user.name] = datetime.datetime.utcnow() + datetime.timedelta(seconds=seconds)
+    
+    current_fish_timestamp = datetime.datetime.utcnow() + datetime.timedelta(seconds=seconds)
+    interaction.client.pond.add_fisher(interaction.user.name, current_fish_timestamp)
     await asyncio.sleep(seconds)
-    if interaction.user.name in interaction.client.fishing_dict:
+    is_there, _ = interaction.client.pond.get_fisher(interaction.user.name)
+    if is_there:
         await channel.send(f"Looks like a fish is biting your rod {interaction.user.name}, quick, /reel it in!")
     else:
         await channel.send(f"{interaction.user.name}, your fish just showed up, but you already tried to /reel it. What a loser!")
+    await asyncio.sleep(FISHING_REACTION_SECONDS)
+    # cheap hack to check if they failed to fish: if they are still at the pond and the timestamp is the same
+    is_there, possibly_different_timestamp = interaction.client.pond.get_fisher(interaction.user.name)
+    if is_there and current_fish_timestamp == possibly_different_timestamp:
+        fish = interaction.client.pond.get_fish()
+        additional_weight = fish.feed()
+        interaction.client.pond.return_fish(fish)
+        await channel.send(f"{interaction.user.mention} failed to catch their fish. The fish enjoyed the snack and is now {additional_weight}g heavier.")
+
 
 @discord.app_commands.command(name="reel", description="Reel in your fish")
 async def reel_fish(interaction: discord.Interaction):
 
-    timestamp: datetime.datetime = interaction.client.fishing_dict.pop(interaction.user.name, None)
-    if not timestamp:
+    is_there, timestamp = interaction.client.pond.get_fisher(interaction.user.name)
+    if not is_there:
         await interaction.response.send_message(f"Sorry, {interaction.user.name}, it looks like you're not fishing. Why not sit down and /fish ?")
+        return
     
     time_diff = abs(timestamp - datetime.datetime.utcnow())
     if  time_diff > datetime.timedelta(seconds=FISHING_REACTION_SECONDS):
 
         await interaction.response.send_message(f"Damn, {interaction.user.mention}, it looks like you missed the fish by {time_diff.total_seconds()} seconds!")
+        return
     
-    await interaction.response.send_message(f"Congratulations, you reeled it in!")
+    fish = interaction.client.pond.get_fish()
+    await interaction.response.send_message(fish.get_catch_message(interaction.user.mention))
