@@ -101,8 +101,9 @@ class Maggus(discord.Client):
             snail=False
         
         self.snail_lock = True
-        await message.reply("Ooooh looks like we're back with another episode of '/snail' or '/notsnail'. You all have 20 seconds to vote!")
-        await asyncio.sleep(20)
+        self.snail_votes = {}
+        await message.reply("Ooooh looks like we're back with another episode of '/snail' or '/notsnail'. You all have 30 seconds to vote!")
+        await asyncio.sleep(30)
         
         if snail:
             await message.channel.send(f"It was indeed snail, correct guesses: {self.snail_votes.get('yes')}")
