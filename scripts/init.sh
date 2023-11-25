@@ -1,5 +1,9 @@
 set -e
 podman build -f ./CONTAINERFILE -t bavarianbot:latest .
+mkdir volumes
+mkdir volumes/db
+mkdir backups
+mkdir backups/db
 nohup podman-compose -f podman-compose.yml up &
 
 echo "giving the container time to start"

@@ -1,5 +1,7 @@
 set -e
 
+current_date_time=$(date "+%Y_%m_%d_%H_%M")
+
 curl -X 'PUT' \
   'http://localhost:8000/client/deactivate' \
   -H 'accept: application/json'
@@ -11,6 +13,7 @@ curl -X 'PUT' \
   -H 'accept: application/json'
 
 podman-compose -f podman-compose.yml down
+cp volumes/db/chalkotheke.db backups/db/chalkotheke_$current_date_time.db
 podman build -f ./CONTAINERFILE -t bavarianbot:latest .
 nohup podman-compose -f podman-compose.yml up &
 
