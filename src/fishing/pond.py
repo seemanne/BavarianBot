@@ -47,8 +47,11 @@ class Fish:
 
     def feed(self):
 
+        additional_weight = random.randint(500, 1000)
         self.n_times_fed += 1
-        self.weight += random.randint(500, 1000)
+        self.weight += additional_weight
+
+        return additional_weight
     
     def get_catch_message(self, fisher_name):
 
