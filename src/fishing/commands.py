@@ -4,6 +4,7 @@ import datetime
 import random
 import asyncio
 
+FISHING_REACTION_SECONDS=60
 
 @discord.app_commands.command(name="fish", description="Start fishing in the pond")
 async def start_fishing(interaction: discord.Interaction):
@@ -29,7 +30,7 @@ async def reel_fish(interaction: discord.Interaction):
         await interaction.response.send_message(f"Sorry, {interaction.user.name}, it looks like you're not fishing. Why not sit down and /fish ?")
     
     time_diff = abs(timestamp - datetime.datetime.utcnow())
-    if  time_diff > datetime.timedelta(seconds=60):
+    if  time_diff > datetime.timedelta(seconds=FISHING_REACTION_SECONDS):
 
         await interaction.response.send_message(f"Damn, {interaction.user.mention}, it looks like you missed the fish by {time_diff.total_seconds()} seconds!")
     
