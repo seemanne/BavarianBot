@@ -44,6 +44,11 @@ class Fish:
             self.funfact_workplace,
             self.funfact_wives
         ]
+
+    def feed(self):
+
+        self.n_times_fed += 1
+        self.weight += random.randint(500, 1000)
     
     def get_catch_message(self, fisher_name):
 
@@ -109,13 +114,13 @@ class Pond:
 
     async def _ecosystem_loop(self):
 
-        asyncio.sleep(5)
+        await asyncio.sleep(5)
 
         while True:
             if len(self.fishes) < POND_SIZE and datetime.datetime.now().hour < 23 and datetime.datetime.now().hour > 6:
                 self.fishes.put(Fish())
             
-            asyncio.sleep(random.randint(30, 90))
+            await asyncio.sleep(random.randint(30, 90))
 
     def _populate(self):
 
