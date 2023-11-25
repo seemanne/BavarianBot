@@ -1,7 +1,7 @@
 import re
 import sqlalchemy
 import discord
-from sqlalchemy import select, desc
+from sqlalchemy import select, desc, insert
 from sqlalchemy.sql import func, text
 from src.orm import Tag, Config
 
@@ -52,3 +52,32 @@ def get_tag(content: str, engine: sqlalchemy.Engine):
             return res
     
     return f"Failed to find tag with name: {matchli.group(1)}, id: {matchli.group(2)}"
+
+def get_config(key: str, engine: sqlalchemy.Engine):
+
+    with engine.connect() as conn:
+
+        query = select(Config.value).where(Config.key == key)
+        res = conn.execute(query).first()
+
+        if not res:
+            return None
+        return res[0]
+    
+def set_config(key: str, value: str, engine: sqlalchemy.Engine):
+
+    with engine.connect() as conn:
+
+        query = insert(Config).values(key=key, value=value)
+        conn.execute(query)
+        conn.commit()
+
+def load_full_config(engine: sqlalchemy.Engine):
+
+    with engine.connect() as conn:
+
+        query = select(Config.key, Config.value)
+        res = conn.execute(query).all()
+
+    ret_dict = {k : v for k,v in res}
+    return ret_dict

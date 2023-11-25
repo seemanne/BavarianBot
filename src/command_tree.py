@@ -4,8 +4,7 @@ import random
 import datetime
 import logging
 import discord.app_commands
-
-LOG = logging.getLogger("uvicorn")
+import src.crud
 
 
 @discord.app_commands.command(name="fish", description="Start fishing in the pond")
