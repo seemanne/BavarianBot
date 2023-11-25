@@ -75,7 +75,7 @@ class Maggus(discord.Client):
 
     async def on_error(self, event_method: str, /, *args: Any, **kwargs: Any) -> None:
 
-        self.log.exception('Ignoring exception in %s', event_method)
+        self.log.info('Ignoring exception in %s', event_method)
 
     def debug(self, message:discord.Message, response: str):
 
