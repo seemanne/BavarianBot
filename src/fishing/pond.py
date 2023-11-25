@@ -91,9 +91,21 @@ class Pond:
         self._populate()
         self.ecosystem_task = asyncio.get_event_loop().create_task(self._ecosystem_loop())
 
+    def get_fisher(self, name: str):
+
+        return (name in self.fishers, self.fishers.get(name, None))
+
+    def add_fisher(self, name: str, time: datetime.datetime):
+
+        self.fishers[name] = time
+
     def get_fish(self) -> Fish:
 
         return self.fishes.get()
+    
+    def return_fish(self, fish: Fish):
+
+        self.fishes.put(fish)
 
     async def _ecosystem_loop(self):
 
