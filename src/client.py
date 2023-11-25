@@ -14,6 +14,7 @@ import src.crud
 import src.models
 import src.command_tree
 import src.snail
+import src.datastructures
 
 class Maggus(discord.Client):
     def __init__(self, *, intents: discord.Intents, log: logging.Logger, **options):
@@ -30,7 +31,7 @@ class Maggus(discord.Client):
         self.message_hooks : dict[int, src.tagger.TagCreationFlow] = {}
 
         self.fishing_dict = {}
-        self.snail_cache = src.snail.LRUCache(1000)
+        self.snail_cache = src.datastructures.LRUCache(1000)
         self.snail_votes = {}
 
     def __repr__(self) -> str:

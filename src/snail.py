@@ -1,28 +1,8 @@
 import re
 import datetime
 import discord
-from collections import OrderedDict
 
-class LRUCache:
-    def __init__(self, capacity):
-        self.capacity = capacity
-        self.cache = OrderedDict()
-
-    def get(self, key):
-        if key in self.cache:
-            self.cache.move_to_end(key)
-            return self.cache[key]
-        else:
-            return None
-
-    def put(self, key, value):
-        if key in self.cache:
-            self.cache[key] = value
-            self.cache.move_to_end(key)
-        else:
-            if len(self.cache) >= self.capacity:
-                self.cache.popitem(last=False)
-            self.cache[key] = value
+import src.datastructures
 
 def check_for_twitter_link(message: str):
 
@@ -32,7 +12,7 @@ def check_for_twitter_link(message: str):
     tweet_id = matchli.group(1)
     return True, tweet_id
 
-def snail_check(message: discord.Message, cache: LRUCache):
+def snail_check(message: discord.Message, cache: src.datastructures.LRUCache):
 
     has_link, tweet_id = check_for_twitter_link(message.content)
     if not has_link:
