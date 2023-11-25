@@ -49,6 +49,8 @@ class Maggus(discord.Client):
         for command in src.command_tree.LIST_OF_COMMANDS:
             self.tree.add_command(command)
 
+        self.tree.on_error = src.command_tree.on_error
+
         self.tree.copy_global_to(guild=discord.Object(id=guild_id))
         await self.tree.sync(guild=discord.Object(id=guild_id))
         self.log.info("COMMAND TREE SYNCED SUCCESSFULLY")

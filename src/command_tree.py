@@ -6,6 +6,9 @@ import logging
 import discord.app_commands
 import src.crud
 
+async def on_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+
+    interaction.client.log.info(f"Error when calling {interaction.command.name}: {error}")
 
 @discord.app_commands.command(name="fish", description="Start fishing in the pond")
 async def start_fishing(interaction: discord.Interaction):
