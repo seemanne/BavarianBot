@@ -42,11 +42,11 @@ async def yes_snail(interaction: discord.Interaction):
         await interaction.response.send_message (f"No snail contest is open currently", ephemeral=True)
         return
     
-    if interaction.user.mention in interaction.client.snail_votes.get("no", set()):
+    if interaction.user.mention in interaction.client.snail_votes.get("no"):
         await interaction.response.send_message(f"Sorry but you already voted!", ephemeral=True)
         return
     
-    interaction.client.snail_votes["yes"] = interaction.client.snail_votes.get("yes", set()) + [interaction.user.mention]
+    interaction.client.snail_votes.get("yes").add(interaction.user.mention)
     await interaction.response.send_message(f"Added you to the yes votes", ephemeral=True)
     return
 
@@ -57,11 +57,11 @@ async def no_snail(interaction: discord.Interaction):
         await interaction.response.send_message(f"No snail contest is open currently", ephemeral=True)
         return
     
-    if interaction.user.mention in interaction.client.snail_votes.get("yes", set()):
+    if interaction.user.mention in interaction.client.snail_votes.get("yes"):
         await interaction.response.send_message(f"Sorry but you already voted!", ephemeral=True)
         return
 
-    interaction.client.snail_votes["no"] = interaction.client.snail_votes.get("no", set()) + [interaction.user.mention]
+    interaction.client.snail_votes.get("no").add(interaction.user.mention)
     await interaction.response.send_message(f"Added you to the no votes", ephemeral=True)
     return
 

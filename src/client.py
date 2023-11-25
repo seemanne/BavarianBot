@@ -101,7 +101,10 @@ class Maggus(discord.Client):
             snail=False
         
         self.snail_lock = True
-        self.snail_votes = {}
+        self.snail_votes = {
+            "yes" : set(),
+            "no" : set()
+        }
         await message.reply("Ooooh looks like we're back with another episode of '/snail' or '/notsnail'. You all have 30 seconds to vote!")
         await asyncio.sleep(30)
         
@@ -110,7 +113,6 @@ class Maggus(discord.Client):
         else:
             await message.channel.send(f"Lol, I tricked you. This Xeet wasn't snail! Correct guesses: {self.snail_votes.get('no')}")
         
-        self.snail_votes = {}
         self.snail_lock = False
         
 
