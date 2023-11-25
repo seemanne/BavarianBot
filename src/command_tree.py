@@ -18,7 +18,10 @@ async def start_fishing(interaction: discord.Interaction):
         seconds = random.randint(1, 3600)
     interaction.client.fishing_dict[interaction.user.name] = datetime.datetime.utcnow() + datetime.timedelta(seconds=seconds)
     await asyncio.sleep(seconds)
-    await channel.send(f"Looks like {interaction.user.name} caught a fish, quick, /reel it in!")
+    if interaction.user.name in interaction.client.fishing_dict:
+        await channel.send(f"Looks like a fish is biting your rod {interaction.user.name}, quick, /reel it in!")
+    else:
+        await channel.send(f"{interaction.user.name}, your fish just showed up, but you already tried to /reel it. What a loser!")
 
 @discord.app_commands.command(name="reel", description="Reel in your fish")
 async def reel_fish(interaction: discord.Interaction):
@@ -28,7 +31,7 @@ async def reel_fish(interaction: discord.Interaction):
         await interaction.response.send_message(f"Sorry, {interaction.user.name}, it looks like you're not fishing. Why not sit down and /fish ?")
     
     time_diff = abs(timestamp - datetime.datetime.utcnow())
-    if  time_diff > datetime.timedelta(seconds=10):
+    if  time_diff > datetime.timedelta(seconds=60):
 
         await interaction.response.send_message(f"Damn, {interaction.user.mention}, it looks like you missed the fish by {time_diff.total_seconds()} seconds!")
     

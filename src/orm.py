@@ -26,3 +26,20 @@ class Tag(Base):
     description = Column(String)
     content = Column(String)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class SnailBet(Base):
+
+    __tablename__ = "snailbet"
+    id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
+    user_id = Column(Integer)
+    result = Column(Integer)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+
+class FishScore(Base):
+
+    __tablename__ = "fishscore"
+    id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
+    user_id = Column(Integer)
+    fish_caught = Column(Integer)
+    fish_missed = Column(Integer)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow)
