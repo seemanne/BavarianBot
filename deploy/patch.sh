@@ -2,6 +2,10 @@ set -e
 
 current_date_time=$(date "+%Y_%m_%d_%H_%M")
 
+curl -X 'GET' \
+  'http://localhost:8000/poast?channel=446853953905229844&message=Brb%2C%20getting%20an%20upgrade' \
+  -H 'accept: application/json'
+
 curl -X 'PUT' \
   'http://localhost:8000/client/deactivate' \
   -H 'accept: application/json'
