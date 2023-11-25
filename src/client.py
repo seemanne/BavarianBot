@@ -46,11 +46,9 @@ class Maggus(discord.Client):
         else:
             guild_id = 389103804835954699
 
-        self.tree.add_command(src.command_tree.start_fishing)
-        self.tree.add_command(src.command_tree.reel_fish)
-        self.tree.add_command(src.command_tree.yes_snail)
-        self.tree.add_command(src.command_tree.no_snail)
-        
+        for command in src.command_tree.LIST_OF_COMMANDS:
+            self.tree.add_command(command)
+
         self.tree.copy_global_to(guild=discord.Object(id=guild_id))
         await self.tree.sync(guild=discord.Object(id=guild_id))
         self.log.info("COMMAND TREE SYNCED SUCCESSFULLY")
