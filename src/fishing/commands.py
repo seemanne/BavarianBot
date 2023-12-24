@@ -1,5 +1,6 @@
 import discord
 import discord.app_commands
+import discord.ui as ui
 import datetime
 import random
 import asyncio
@@ -55,3 +56,34 @@ async def reel_fish(interaction: discord.Interaction):
     fish = interaction.client.pond.get_fish()
     interaction.client.pond.refill_fish()
     await interaction.response.send_message(fish.get_catch_message(interaction.user.mention))
+
+@discord.app_commands.command(name="get_rod", description="Get another rod")
+async def get_rod(interaction: discord.Interaction):
+
+    modal = RodModal()
+    await interaction.response.send_modal(modal)
+
+class RodModal(ui.Modal, title="Rod Ordering terminal"):
+
+    reason = ui.TextInput(label="Explain why you deserve a rod", required=True, min_length=200, max_length=3000, style=discord.TextStyle.long)
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        
+        await interaction.response.send_message(f"Santa has received your request {interaction.user.name}")
+        await asyncio.sleep(3)
+        total = 0
+        while total < 100:
+            await interaction.edit_original_response(content = f"Processing: {total}%")
+            await asyncio.sleep(1.2)
+            total += random.randint(0, 8)
+        total = 0
+        while total < 100:
+            await interaction.edit_original_response(content = f"Downloading response from Santas Starlink: {total}%")
+            await asyncio.sleep(1.2)
+            total += random.randint(0, 5)
+        await interaction.edit_original_response(content = "Got a response from Santa")
+        await interaction.channel.send(f"{interaction.user.name} wishes for a new rod from santa. Their reasons: \n{self.reason}\nWhat do you think chat? Do they deserve a rod?")
+
+    async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
+        
+        await interaction.client.on_error(f"RodOrderingModal: {error}")
