@@ -7,9 +7,10 @@ from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
-def init_db(engine: sqlalchemy.Engine):
 
+def init_db(engine: sqlalchemy.Engine):
     Base.metadata.create_all(bind=engine, checkfirst=True)
+
 
 class Config(Base):
     __tablename__ = "config"
@@ -17,8 +18,8 @@ class Config(Base):
     value = Column(String)
     last_update = Column(DateTime, default=datetime.datetime.utcnow)
 
-class Tag(Base):
 
+class Tag(Base):
     __tablename__ = "tags"
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
     num = Column(Integer)
@@ -27,16 +28,16 @@ class Tag(Base):
     content = Column(String)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow)
 
-class SnailBet(Base):
 
+class SnailBet(Base):
     __tablename__ = "snailbet"
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
     user_id = Column(Integer)
     result = Column(Integer)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
 
-class FishScore(Base):
 
+class FishScore(Base):
     __tablename__ = "fishscore"
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
     user_id = Column(Integer)
