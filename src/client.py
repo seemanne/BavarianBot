@@ -77,7 +77,7 @@ class Maggus(discord.Client):
         self.process_message_hooks(message)
         self.cinephile(message)
         self.tagger(message)
-        await self.snailcheck(message)
+        # await self.snailcheck(message)
 
     async def on_error(self, event_method: str, /, *args: Any, **kwargs: Any) -> None:
         self.log.info("Ignoring exception in %s", event_method)
