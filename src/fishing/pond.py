@@ -17,6 +17,7 @@ BIG_FAN_LIST = [
     "posting tweets in #general. Good riddance",
     "watching gammbus fish",
     "going to bed early",
+    "Fishmas",
 ]
 
 WORKPLACE_LIST = [
@@ -25,7 +26,18 @@ WORKPLACE_LIST = [
     "X, but got fired a year ago and hasn't been employed since",
     "X",
     "Hooters", 
-    "a daycare"
+    "a daycare",
+    "Santas elf factory",
+    "home, totally isolated from its swarm"
+]
+
+WISHES_LIST = [
+    "you celebrate fishmas with your whole family. How wholesome!",
+    "you would shower more often",
+    "more people were informed about the envoironmental impact of fishing",
+    "you were more productive at work",
+    "printers were less smeary",
+    "a nice high paid hedgefund job",
 ]
 
 class Fish:
@@ -38,11 +50,13 @@ class Fish:
         self.wives = random.randint(0, 3)
         self.big_fan = random.choice(BIG_FAN_LIST)
         self.workplace = random.choice(WORKPLACE_LIST)
+        self.wish = random.choice(WISHES_LIST)
 
         self.funfact_functions = [
             self.funfact_fan,
             self.funfact_workplace,
-            self.funfact_wives
+            self.funfact_wives,
+            self.funfact_wishes
         ]
 
     def feed(self):
@@ -85,6 +99,14 @@ class Fish:
         if self.wives:
             return " His wife will have to take care of his estate."
         return " He remained single forever."
+    
+    def funfact_wishes(self):
+
+        rand = random.random()
+        if rand < 0.5:
+            return f" She secretly wished that {self.wish}"
+        else:
+            return f" He secretly wished that {self.wish}"
 
 class Pond:
 
