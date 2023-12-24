@@ -9,6 +9,10 @@ FISHING_REACTION_SECONDS=60
 @discord.app_commands.command(name="fish", description="Start fishing in the pond")
 async def start_fishing(interaction: discord.Interaction):
 
+    is_there, _ = interaction.client.pond.get_fisher(interaction.user.name)
+    if is_there:
+        await interaction.response.send_message(f"Hey {interaction.user.name}, it looks like you're already using your rod. Maybe try to get another one using /get_rod?")
+        return
     await interaction.response.send_message(f"{interaction.user.name} has started fishing!")
     channel = interaction.channel
     if interaction.client.is_dev:
