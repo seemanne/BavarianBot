@@ -3,7 +3,7 @@ import sqlalchemy
 import discord
 from sqlalchemy import select, desc, insert
 from sqlalchemy.sql import func, text
-from src.orm import Tag, Config
+from src.orm import Tag, Config, FishResult
 
 
 def add_tag(tag_data: dict, engine: sqlalchemy.Engine):
@@ -88,3 +88,26 @@ def load_full_config(engine: sqlalchemy.Engine):
 
     ret_dict = {k: v for k, v in res}
     return ret_dict
+
+
+def save_fish(user_name: str, fish_weight: int, fish_fed: int, engine: sqlalchemy.Engine):
+
+    with engine.connect() as conn:
+        query = insert(FishResult).values(user_name=user_name, fish_weight=fish_weight, fish_fed=fish_fed)
+        conn.execute(query)
+        conn.commit()
+
+
+def get_all_catches_by_username(user_name: str, engine: sqlalchemy.Engine):
+
+    with engine.connect() as conn:
+        query = select(FishResult.id, FishResult.fish_weight, FishResult.caught_at).where(FishResult.user_name == user_name).order_by(desc(FishResult.id))
+        res = conn.execute(query).all()
+
+    ret = {}
+    count = 0
+    for (_, weight, caught_at) in res:
+        ret[str(count)] = (weight, str(caught_at))
+        count += 1
+    
+    return ret
