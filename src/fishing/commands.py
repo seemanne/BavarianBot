@@ -5,6 +5,8 @@ import datetime
 import random
 import asyncio
 
+import src.crud
+
 FISHING_REACTION_SECONDS = 60
 
 
@@ -71,6 +73,7 @@ async def reel_fish(interaction: discord.Interaction):
 
     fish = interaction.client.pond.get_fish()
     interaction.client.pond.refill_fish()
+    src.crud.save_fish(interaction.user.name, fish.weight, fish.n_times_fed, interaction.client.sql_engine)
     await interaction.response.send_message(
         fish.get_catch_message(interaction.user.mention)
     )
