@@ -9,6 +9,7 @@ import src.crud
 from src.fishing.commands import reel_fish, start_fishing, get_rod
 from src.feedback.commands import feedback
 
+
 async def on_error(
     interaction: discord.Interaction, error: discord.app_commands.AppCommandError
 ):

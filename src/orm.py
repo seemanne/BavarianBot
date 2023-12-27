@@ -47,7 +47,6 @@ class FishScore(Base):
 
 
 class FishResult(Base):
-
     __tablename__ = "fishresult"
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
     user_name = Column(String)

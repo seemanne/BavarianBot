@@ -60,7 +60,10 @@ class Maggus(discord.Client):
         self.pond.populate_pond_and_start_ecosystem()
         self.log.info("Started pond ecosystem")
 
-        self.feedback_webhook = discord.Webhook.from_url(f"https://discord.com/api/webhooks/1189583746815508510/{src.auth.WEBHOOK}", client=self)
+        self.feedback_webhook = discord.Webhook.from_url(
+            f"https://discord.com/api/webhooks/1189583746815508510/{src.auth.WEBHOOK}",
+            client=self,
+        )
         # This copies the global commands over to your guild.
         # self.tree.copy_global_to(guild=my_secrets.MY_GUILD)
         # await self.tree.sync(guild=my_secrets.MY_GUILD)
