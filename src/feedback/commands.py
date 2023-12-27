@@ -36,7 +36,11 @@ class BugModal(ui.Modal):
         )
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
-        embed = discord.Embed(title="🐛 Bug Report", color=discord.Colour.red())
+        embed = discord.Embed(
+            title="🐛 Bug Report",
+            color=discord.Colour.red(),
+            timestamp=discord.utils.utcnow(),
+        )
         embed.set_author(
             name=interaction.user.name, icon_url=interaction.user.display_avatar.url
         )
@@ -84,7 +88,9 @@ class ImprovementModal(ui.Modal):
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
         embed = discord.Embed(
-            title="🚀 Improvement request", color=discord.Colour.blue()
+            title="🚀 Improvement request",
+            color=discord.Colour.blue(),
+            timestamp=discord.utils.utcnow(),
         )
         embed.set_author(
             name=interaction.user.name, icon_url=interaction.user.display_avatar.url
@@ -123,7 +129,11 @@ class FeatureRequestModal(ui.Modal):
         )
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
-        embed = discord.Embed(title="🚧 Feature Request", color=discord.Colour.green())
+        embed = discord.Embed(
+            title="🚧 Feature Request",
+            color=discord.Colour.green(),
+            timestamp=discord.utils.utcnow(),
+        )
         embed.set_author(
             name=interaction.user.name, icon_url=interaction.user.display_avatar.url
         )
