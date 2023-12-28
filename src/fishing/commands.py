@@ -50,6 +50,9 @@ async def start_fishing(interaction: discord.Interaction):
         fish = interaction.client.pond.get_fish()
         additional_weight = fish.feed()
         interaction.client.pond.return_fish(fish)
+        interaction.client.pond.pop_fisher(
+            interaction.user.name
+        )
         await channel.send(
             f"{interaction.user.mention} failed to catch their fish. The fish enjoyed the snack and is now {additional_weight}g heavier."
         )
