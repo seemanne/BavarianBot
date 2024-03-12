@@ -1,7 +1,7 @@
 import re
 import sqlalchemy
 import discord
-from sqlalchemy import select, desc, insert
+from sqlalchemy import select, desc, insert, update
 from sqlalchemy.sql import func, text
 from src.orm import Tag, Config, FishResult
 
@@ -34,7 +34,7 @@ def list_tags(tag_name: str, engine: sqlalchemy.Engine):
         for row in conn.execute(query):
             message += f"{row[0]} | {row[1]}\n"
     return discord.Embed(
-        title=f'Found the following tags for "{tag_name}":', description=message
+        title=f'Found the following tags for "{tag_name}":', description=message.strip()
     )
 
 
@@ -48,7 +48,7 @@ def list_all_tags(engine: sqlalchemy.Engine):
         )
         for row in conn.execute(query):
             message += f"'{row[0]}' : {row[1]} tags\n"
-    return discord.Embed(title="Available tags", description=message)
+    return discord.Embed(title="Available tags", description=message.strip())
 
 
 def get_tag(content: str, engine: sqlalchemy.Engine):
@@ -58,11 +58,11 @@ def get_tag(content: str, engine: sqlalchemy.Engine):
             query = select(Tag.content).where(
                 Tag.name == matchli.group(1), Tag.num == matchli.group(2)
             )
-            res = conn.execute(query).first()[0]
-            return res
-
-    return f"Failed to find tag with name: {matchli.group(1)}, id: {matchli.group(2)}"
-
+            res = conn.execute(query).first()
+            if res:
+                return res[0]
+            return f"Failed to find tag with name: {matchli.group(1)}, id: {matchli.group(2)}"
+    return f"Sorry, I couldn't parse this query. If this is a bug use /feedback"
 
 def get_config(key: str, engine: sqlalchemy.Engine):
     with engine.connect() as conn:
@@ -76,7 +76,12 @@ def get_config(key: str, engine: sqlalchemy.Engine):
 
 def set_config(key: str, value: str, engine: sqlalchemy.Engine):
     with engine.connect() as conn:
-        query = insert(Config).values(key=key, value=value)
+        query = select(Config).where(Config.key == key)
+        existing_record = conn.execute(query).first()
+        if existing_record:
+            query = update(Config).values(value=value).where(Config.key==key)
+        else:
+            query = insert(Config).values(key=key, value=value)
         conn.execute(query)
         conn.commit()
 

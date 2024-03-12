@@ -33,4 +33,4 @@ jobs:
         pip install pytest pytest-cov
     - name: Test Maggus
       run: |
-        pytest --cov=src/ tests/
+        pytest --cov-report term-missing --cov-fail-under=90 --cov=src/ tests/
