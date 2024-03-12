@@ -38,7 +38,7 @@ class Maggus(discord.Client):
         self.is_dev = src.auth.DEV
 
         if in_test:
-            db_url = "sqlite:///db/test.db"
+            db_url = "sqlite:///test.db"
         else:
             db_url = "sqlite:///db/chalkotheke.db"
         self.sql_engine = sqlalchemy.create_engine(db_url)
