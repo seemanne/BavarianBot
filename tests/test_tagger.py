@@ -85,8 +85,17 @@ class ClientTest(unittest.TestCase):
             content="help"
         )
         self.client.process_message_hooks(message_3)
+        message_4 = Message(
+            content="test_tag"
+        )
+        self.client.process_message_hooks(message_4)
+        message_5 = Message(
+            content="test_tag description, high detail"
+        )
+        self.client.process_message_hooks(message_5)
 
         self.client.loop.run_tasks()
 
         assert message_1.test_reply.reply
         assert message_3.test_reply.reply.__contains__("Banned tag name")
+        assert message_5.test_reply.reply == "Tag creation successful"

@@ -245,14 +245,18 @@ class Maggus(discord.Client):
         if not message.content.strip().startswith("<@660689481984376843>"):
             return
 
-        matchli = re.match(r"<@660689481984376843> (\d*)", message)
+        matchli = re.match(r"<@660689481984376843> (\d*)", message.content)
         if not matchli:
             return
         number = int(matchli.group(1))
 
+        if not self.countdown_cache:
+            self.countdown_cache = number
+
         if number > self.countdown_cache:
-            self.log.info("LMAO")
             self.loop.create_task(message.add_reaction("🤥"))
+        else:
+            self.countdown_cache = number
 
     async def get_history(self, channel_id: int, n: int):
         ret_list = []

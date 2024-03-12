@@ -23,9 +23,9 @@ class Message:
 
         self.test_reply = MagicObject(reply=reply, **kwargs)
 
-    async def add_reaction(self, **kwargs):
+    async def add_reaction(self, object=None, **kwargs):
 
-        self.test_reactions_added = MagicObject(**kwargs)
+        self.test_reactions_added = MagicObject(object=object, **kwargs)
 
 class Channel:
 
