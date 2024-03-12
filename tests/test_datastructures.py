@@ -2,8 +2,8 @@ import unittest
 
 from src.datastructures import LRUCache, RandomStack
 
-class ClientTest(unittest.TestCase):
 
+class ClientTest(unittest.TestCase):
     def setUp(self) -> None:
         pass
 
@@ -11,10 +11,9 @@ class ClientTest(unittest.TestCase):
         pass
 
     def test_lru_cache(self):
-
         cache = LRUCache(5)
         cache.put("k_1", "v_1")
-        
+
         assert cache.get("k_1") == "v_1"
         assert not cache.get("k_2")
 

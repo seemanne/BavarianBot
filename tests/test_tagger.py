@@ -8,16 +8,19 @@ from src.orm import init_db
 from src.client import Maggus
 from .mocking import Message, TaskConsumingLoop
 
+
 class ClientTest(unittest.TestCase):
-
     def setUp(self) -> None:
-
         self.logger = logging.getLogger()
-        self.client = Maggus(intents=discord.Intents.all(), log=self.logger, in_test=True, test_loop=TaskConsumingLoop())
+        self.client = Maggus(
+            intents=discord.Intents.all(),
+            log=self.logger,
+            in_test=True,
+            test_loop=TaskConsumingLoop(),
+        )
         init_db(self.client.sql_engine)
-    
+
     def tearDown(self) -> None:
-        
         conn = sqlite3.connect("sqlite:///../test.db")
         cursor = conn.cursor()
 
@@ -31,37 +34,28 @@ class ClientTest(unittest.TestCase):
 
         conn.commit()
         conn.close()
-    
-    def test_tagger_empty(self):
 
-        message = Message(
-            content="$tag"
-        )
+    def test_tagger_empty(self):
+        message = Message(content="$tag")
         self.client.tagger(message)
 
         self.client.loop.run_tasks()
 
-        assert message.test_reply.reply == "Sorry, but that tag was not recognized. Try listing tags with $tag list or using $tag help"
+        assert (
+            message.test_reply.reply
+            == "Sorry, but that tag was not recognized. Try listing tags with $tag list or using $tag help"
+        )
 
     def test_tagger_add(self):
-
-        message_1 = Message(
-            content="$tag add"
-        )
+        message_1 = Message(content="$tag add")
         self.client.tagger(message_1)
         assert self.client.message_hooks
 
-        message_2 = Message(
-            content="http://test-image"
-        )
+        message_2 = Message(content="http://test-image")
         self.client.process_message_hooks(message_2)
-        message_3 = Message(
-            content="test_tag"
-        )
+        message_3 = Message(content="test_tag")
         self.client.process_message_hooks(message_3)
-        message_4 = Message(
-            content="test_tag description, high detail"
-        )
+        message_4 = Message(content="test_tag description, high detail")
         self.client.process_message_hooks(message_4)
 
         self.client.loop.run_tasks()
@@ -70,28 +64,17 @@ class ClientTest(unittest.TestCase):
         assert message_2.test_reply.reply
         assert message_3.test_reply.reply
         assert message_4.test_reply.reply == "Tag creation successful"
-    
-    def test_tagger_add_failures(self):
 
-        message_1 = Message(
-            content="$tag add"
-        )
+    def test_tagger_add_failures(self):
+        message_1 = Message(content="$tag add")
         self.client.tagger(message_1)
-        message_2 = Message(
-            content="http://test-image"
-        )
+        message_2 = Message(content="http://test-image")
         self.client.process_message_hooks(message_2)
-        message_3 = Message(
-            content="help"
-        )
+        message_3 = Message(content="help")
         self.client.process_message_hooks(message_3)
-        message_4 = Message(
-            content="test_tag"
-        )
+        message_4 = Message(content="test_tag")
         self.client.process_message_hooks(message_4)
-        message_5 = Message(
-            content="test_tag description, high detail"
-        )
+        message_5 = Message(content="test_tag description, high detail")
         self.client.process_message_hooks(message_5)
 
         self.client.loop.run_tasks()

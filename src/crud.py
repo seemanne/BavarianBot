@@ -64,6 +64,7 @@ def get_tag(content: str, engine: sqlalchemy.Engine):
             return f"Failed to find tag with name: {matchli.group(1)}, id: {matchli.group(2)}"
     return f"Sorry, I couldn't parse this query. If this is a bug use /feedback"
 
+
 def get_config(key: str, engine: sqlalchemy.Engine):
     with engine.connect() as conn:
         query = select(Config.value).where(Config.key == key)
@@ -79,7 +80,7 @@ def set_config(key: str, value: str, engine: sqlalchemy.Engine):
         query = select(Config).where(Config.key == key)
         existing_record = conn.execute(query).first()
         if existing_record:
-            query = update(Config).values(value=value).where(Config.key==key)
+            query = update(Config).values(value=value).where(Config.key == key)
         else:
             query = insert(Config).values(key=key, value=value)
         conn.execute(query)
