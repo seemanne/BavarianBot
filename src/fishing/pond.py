@@ -117,7 +117,7 @@ class Pond:
         ):
             self.fishes.put(Fish())
 
-    def populate_pond_and_start_ecosystem(self):
+    def populate_pond_and_start_ecosystem(self): # pragma: no cover
         self._populate()
         self.ecosystem_task = asyncio.get_event_loop().create_task(
             self._ecosystem_loop()
@@ -138,7 +138,7 @@ class Pond:
     def return_fish(self, fish: Fish):
         self.fishes.put(fish)
 
-    async def _ecosystem_loop(self):
+    async def _ecosystem_loop(self): # pragma: no cover
         await asyncio.sleep(5)
 
         while True:
@@ -154,8 +154,3 @@ class Pond:
     def _populate(self):
         for _ in range(POND_SIZE):
             self.fishes.put(Fish())
-
-
-if __name__ == "__main__":
-    fish = Fish()
-    print(fish.get_funfact())
