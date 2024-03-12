@@ -9,10 +9,11 @@ def parse_movie(message: discord.Message):
     content = content.replace("'", "")
     content = content.replace(",", "")
     content = content.replace("/", " ")
+    content = content.replace(":", "")
     movie_search = re.search("(([A-Z|0-9]+ )+)\((\d{4})\)", content)
     if movie_search:
-        movie = movie_search.group(1)
-        year = movie_search.group(3)
+        movie = movie_search.group(1).strip()
+        year = movie_search.group(3).strip()
     else:
         return [False, False]
     return [movie, year]
@@ -35,7 +36,7 @@ def create_letterboxd_string(match: str, year: str):
     return [wiyear, woyear, widirectlink, wodirectlink]
 
 
-def cinema_check(message: discord.Message):
+def cinema_check(message: discord.Message, loop: asyncio.AbstractEventLoop):
     withyear = True
     content = parse_movie(message)
     if not content[0]:
@@ -64,7 +65,7 @@ def cinema_check(message: discord.Message):
         withyear = False
     if withyear:
         embed = discord.Embed(
-            title=content[0] + content[1],
+            title=content[0] + " " + content[1],
             url=url[2],
             description=wiarticle.text,
             color=discord.Color.blue(),
@@ -76,6 +77,5 @@ def cinema_check(message: discord.Message):
             description=woarticle.text,
             color=discord.Color.blue(),
         )
-    loop = asyncio.get_event_loop()
     loop.create_task(message.channel.send(embed=embed))
     return

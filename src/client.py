@@ -148,7 +148,7 @@ class Maggus(discord.Client):
         self.snail_lock = False
 
     def cinephile(self, message):
-        src.cinephile.cinema_check(message)
+        src.cinephile.cinema_check(message, self.loop)
 
     def tagger(self, message: discord.Message):
         if not message.content.startswith("$tag"):
