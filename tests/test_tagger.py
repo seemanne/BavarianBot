@@ -70,3 +70,23 @@ class ClientTest(unittest.TestCase):
         assert message_2.test_reply.reply
         assert message_3.test_reply.reply
         assert message_4.test_reply.reply == "Tag creation successful"
+    
+    def test_tagger_add_failures(self):
+
+        message_1 = Message(
+            content="$tag add"
+        )
+        self.client.tagger(message_1)
+        message_2 = Message(
+            content="http://test-image"
+        )
+        self.client.process_message_hooks(message_2)
+        message_3 = Message(
+            content="help"
+        )
+        self.client.process_message_hooks(message_3)
+
+        self.client.loop.run_tasks()
+
+        assert message_1.test_reply.reply
+        assert message_3.test_reply.reply.__contains__("Banned tag name")
