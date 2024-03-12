@@ -20,13 +20,28 @@ import src.fishing.pond
 
 
 class Maggus(discord.Client):
-    def __init__(self, *, intents: discord.Intents, log: logging.Logger, **options):
-        super().__init__(intents=intents, **options)
-        self.tree = app_commands.CommandTree(self)
+    def __init__(
+        self,
+        *,
+        intents: discord.Intents,
+        log: logging.Logger,
+        in_test: bool = False,
+        test_loop=None,
+        **options,
+    ):
+        if in_test:
+            self.loop = test_loop
+        else:
+            super().__init__(intents=intents, **options)
+            self.tree = app_commands.CommandTree(self)
         self.log = log
         self.is_dev = src.auth.DEV
 
-        self.sql_engine = sqlalchemy.create_engine("sqlite:///db/chalkotheke.db")
+        if in_test:
+            db_url = "sqlite:///db/test.db"
+        else:
+            db_url = "sqlite:///db/chalkotheke.db"
+        self.sql_engine = sqlalchemy.create_engine(db_url)
 
         self.activated = True
         self.snail_lock = False
@@ -183,7 +198,7 @@ class Maggus(discord.Client):
         self._check_tag_abort(message)
 
         self.message_hooks[message.id] = src.tagger.TagCreationFlow(
-            message=message, sql_engine=self.sql_engine
+            message=message, sql_engine=self.sql_engine, loop=self.loop
         )
 
     def alter_tag_flow(self, message: discord.Message):
