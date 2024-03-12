@@ -18,7 +18,7 @@ class ClientTest(unittest.TestCase):
     
     def tearDown(self) -> None:
         
-        conn = sqlite3.connect("sqlite:///../db/test.db")
+        conn = sqlite3.connect("sqlite:///../test.db")
         cursor = conn.cursor()
 
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
