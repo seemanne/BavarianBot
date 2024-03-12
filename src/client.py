@@ -1,6 +1,7 @@
 import asyncio
 import random
 import logging
+import re
 from typing import Any
 import sqlalchemy
 import discord
@@ -35,6 +36,7 @@ class Maggus(discord.Client):
         self.pond = src.fishing.pond.Pond()
         self.snail_cache = src.datastructures.LRUCache(1000)
         self.snail_votes = {}
+        self.countdown_cache = None
 
     def __repr__(self) -> str:
         return "BavarianClient"
@@ -82,6 +84,7 @@ class Maggus(discord.Client):
         self.process_message_hooks(message)
         self.cinephile(message)
         self.tagger(message)
+        self.countdown_check(message)
         # await self.snailcheck(message)
 
     async def on_error(self, event_method: str, /, *args: Any, **kwargs: Any) -> None:
@@ -219,6 +222,22 @@ class Maggus(discord.Client):
         tag = src.crud.get_tag(content, self.sql_engine)
 
         self.loop.create_task(message.reply(tag))
+
+    def countdown_check(self, message: discord.Message):
+        if not message.channel.id == 874290704522821694:
+            return
+
+        if not message.content.strip().startswith("<@660689481984376843>"):
+            return
+
+        matchli = re.match(r"<@660689481984376843> (\d*)", message)
+        if not matchli:
+            return
+        number = int(matchli.group(1))
+
+        if number > self.countdown_cache:
+            self.log.info("LMAO")
+            self.loop.create_task(message.add_reaction("🤥"))
 
     async def get_history(self, channel_id: int, n: int):
         ret_list = []
