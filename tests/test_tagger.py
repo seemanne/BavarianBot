@@ -83,29 +83,31 @@ class ClientTest(unittest.TestCase):
         assert message_1.test_reply.reply
         assert message_3.test_reply.reply.__contains__("Banned tag name")
         assert message_5.test_reply.reply == "Tag creation successful"
-    
-    @patch("src.crud.get_tag", new = lambda x,y : "test_tag")
-    def test_post_tag(self):
 
-        message = Message(
-            content = "$tag gandalf 1"
-        )
+    @patch("src.crud.get_tag", new=lambda x, y: "test_tag")
+    def test_post_tag(self):
+        message = Message(content="$tag gandalf 1")
         self.client.post_tag(message)
 
         self.client.loop.run_tasks()
         assert message.test_reply.reply == "test_tag"
-    
-    @patch("src.crud.list_all_tags", new = lambda x: discord.Embed(title="Available tags", description="Embed desc all"))
-    @patch("src.crud.list_tags", new= lambda x, y: discord.Embed(title="Available tags", description="Embed desc single"))
-    def test_list_tags(self):
 
-        message_1 = Message(
-            content="$tag list"
-        )
+    @patch(
+        "src.crud.list_all_tags",
+        new=lambda x: discord.Embed(
+            title="Available tags", description="Embed desc all"
+        ),
+    )
+    @patch(
+        "src.crud.list_tags",
+        new=lambda x, y: discord.Embed(
+            title="Available tags", description="Embed desc single"
+        ),
+    )
+    def test_list_tags(self):
+        message_1 = Message(content="$tag list")
         self.client.list_tags(message_1)
-        message_2 = Message(
-            content="$tag list gandalf"
-        )
+        message_2 = Message(content="$tag list gandalf")
         self.client.list_tags(message_2)
 
         self.client.loop.run_tasks()

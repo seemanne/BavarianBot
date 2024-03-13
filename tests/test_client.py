@@ -63,9 +63,8 @@ class ClientTest(unittest.TestCase):
 
         assert message_3.test_reactions_added.object == "🤥"
         assert self.client.countdown_cache == 69419
-    
-    def test_activation(self):
 
+    def test_activation(self):
         self.client.activate()
         assert self.client.activated
 
