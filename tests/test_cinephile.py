@@ -89,7 +89,7 @@ class ClientTest(unittest.TestCase):
             res[1] == "https://letterboxd.com/film/dune-part-two/reviews/by/activity/"
         )
 
-    def test_cinema_check(self):
+    def test_cinema_check_negative(self):
         logger = logging.getLogger()
         client = Maggus(
             intents=discord.Intents.all(),
@@ -103,7 +103,7 @@ class ClientTest(unittest.TestCase):
         cinema_check(message_1, client.loop)
 
     @patch("newspaper.Article", new=FakeArticle)
-    def test_cinema_check(self):
+    def test_cinema_check_with_year(self):
         logger = logging.getLogger()
         client = Maggus(
             intents=discord.Intents.all(),
@@ -126,7 +126,7 @@ class ClientTest(unittest.TestCase):
         )
 
     @patch("newspaper.Article", new=FakeNoNumberArticle)
-    def test_cinema_check(self):
+    def test_cinema_check_without_year(self):
         logger = logging.getLogger()
         client = Maggus(
             intents=discord.Intents.all(),
