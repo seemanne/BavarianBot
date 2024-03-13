@@ -173,7 +173,7 @@ class Maggus(discord.Client):
             case "add":
                 self.add_tag_flow(message)
             case "list":
-                self.loop.create_task(self.list_tags(message))
+                self.list_tags(message)
             case "alter":
                 return
             case "delete":
@@ -224,13 +224,13 @@ class Maggus(discord.Client):
         for id in cleanup_ids:
             self.message_hooks.pop(id)
 
-    async def list_tags(self, message: discord.Message):
+    def list_tags(self, message: discord.Message):
         tag_name = message.content.strip().lstrip("$tag list ")
         if tag_name == "":
             embed = src.crud.list_all_tags(self.sql_engine)
         else:
             embed = src.crud.list_tags(tag_name, self.sql_engine)
-        await message.reply(embed=embed)
+        self.loop.create_task(message.reply(embed=embed))
 
     def post_tag(self, message: discord.Message):
         content = message.content.strip().lstrip("$tag ")
@@ -278,7 +278,3 @@ class Maggus(discord.Client):
             )
 
         return ret_list
-
-
-# client = Maggus(intents=discord.Intents.all())
-# client.run(auth.AUTH)
