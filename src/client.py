@@ -1,6 +1,7 @@
 import asyncio
 import random
 import logging
+import re
 from typing import Any
 import sqlalchemy
 import discord
@@ -19,13 +20,28 @@ import src.fishing.pond
 
 
 class Maggus(discord.Client):
-    def __init__(self, *, intents: discord.Intents, log: logging.Logger, **options):
-        super().__init__(intents=intents, **options)
-        self.tree = app_commands.CommandTree(self)
+    def __init__(
+        self,
+        *,
+        intents: discord.Intents,
+        log: logging.Logger,
+        in_test: bool = False,
+        test_loop=None,
+        **options,
+    ):
+        if in_test:
+            self.loop = test_loop
+        else:
+            super().__init__(intents=intents, **options)
+            self.tree = app_commands.CommandTree(self)
         self.log = log
         self.is_dev = src.auth.DEV
 
-        self.sql_engine = sqlalchemy.create_engine("sqlite:///db/chalkotheke.db")
+        if in_test:
+            db_url = "sqlite:///test.db"
+        else:
+            db_url = "sqlite:///db/chalkotheke.db"
+        self.sql_engine = sqlalchemy.create_engine(db_url)
 
         self.activated = True
         self.snail_lock = False
@@ -35,6 +51,7 @@ class Maggus(discord.Client):
         self.pond = src.fishing.pond.Pond()
         self.snail_cache = src.datastructures.LRUCache(1000)
         self.snail_votes = {}
+        self.countdown_cache = None
 
     def __repr__(self) -> str:
         return "BavarianClient"
@@ -59,6 +76,11 @@ class Maggus(discord.Client):
 
         self.pond.populate_pond_and_start_ecosystem()
         self.log.info("Started pond ecosystem")
+
+        self.feedback_webhook = discord.Webhook.from_url(
+            f"https://discord.com/api/webhooks/1189583746815508510/{src.auth.WEBHOOK}",
+            client=self,
+        )
         # This copies the global commands over to your guild.
         # self.tree.copy_global_to(guild=my_secrets.MY_GUILD)
         # await self.tree.sync(guild=my_secrets.MY_GUILD)
@@ -77,6 +99,7 @@ class Maggus(discord.Client):
         self.process_message_hooks(message)
         self.cinephile(message)
         self.tagger(message)
+        self.countdown_check(message)
         # await self.snailcheck(message)
 
     async def on_error(self, event_method: str, /, *args: Any, **kwargs: Any) -> None:
@@ -125,7 +148,7 @@ class Maggus(discord.Client):
         self.snail_lock = False
 
     def cinephile(self, message):
-        src.cinephile.cinema_check(message)
+        src.cinephile.cinema_check(message, self.loop)
 
     def tagger(self, message: discord.Message):
         if not message.content.startswith("$tag"):
@@ -150,7 +173,7 @@ class Maggus(discord.Client):
             case "add":
                 self.add_tag_flow(message)
             case "list":
-                self.loop.create_task(self.list_tags(message))
+                self.list_tags(message)
             case "alter":
                 return
             case "delete":
@@ -175,7 +198,7 @@ class Maggus(discord.Client):
         self._check_tag_abort(message)
 
         self.message_hooks[message.id] = src.tagger.TagCreationFlow(
-            message=message, sql_engine=self.sql_engine
+            message=message, sql_engine=self.sql_engine, loop=self.loop
         )
 
     def alter_tag_flow(self, message: discord.Message):
@@ -201,19 +224,39 @@ class Maggus(discord.Client):
         for id in cleanup_ids:
             self.message_hooks.pop(id)
 
-    async def list_tags(self, message: discord.Message):
+    def list_tags(self, message: discord.Message):
         tag_name = message.content.strip().lstrip("$tag list ")
         if tag_name == "":
             embed = src.crud.list_all_tags(self.sql_engine)
         else:
             embed = src.crud.list_tags(tag_name, self.sql_engine)
-        await message.reply(embed=embed)
+        self.loop.create_task(message.reply(embed=embed))
 
     def post_tag(self, message: discord.Message):
         content = message.content.strip().lstrip("$tag ")
         tag = src.crud.get_tag(content, self.sql_engine)
 
         self.loop.create_task(message.reply(tag))
+
+    def countdown_check(self, message: discord.Message):
+        if not message.channel.id == 874290704522821694:
+            return
+
+        if not message.content.strip().startswith("<@660689481984376843>"):
+            return
+
+        matchli = re.match(r"<@660689481984376843> (\d*)", message.content)
+        if not matchli:
+            return
+        number = int(matchli.group(1))
+
+        if not self.countdown_cache:
+            self.countdown_cache = number
+
+        if number > self.countdown_cache:
+            self.loop.create_task(message.add_reaction("🤥"))
+        else:
+            self.countdown_cache = number
 
     async def get_history(self, channel_id: int, n: int):
         ret_list = []
@@ -235,7 +278,3 @@ class Maggus(discord.Client):
             )
 
         return ret_list
-
-
-# client = Maggus(intents=discord.Intents.all())
-# client.run(auth.AUTH)

@@ -1,6 +1,6 @@
 set -e
 cat .env
-podman build -f ./CONTAINERFILE -t bavarianbot:latest .
+podman build -f ./CONTAINERFILE_BOT -t bavarianbot:latest .
 mkdir -p volumes/db
 mkdir -p backups/db
 nohup podman-compose -f podman-compose.yml up &

@@ -44,3 +44,12 @@ class FishScore(Base):
     fish_caught = Column(Integer)
     fish_missed = Column(Integer)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class FishResult(Base):
+    __tablename__ = "fishresult"
+    id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
+    user_name = Column(String)
+    fish_weight = Column(Integer)
+    fish_fed = Column(Integer)
+    caught_at = Column(DateTime, default=datetime.datetime.utcnow)

@@ -9,12 +9,14 @@ PRIVILEGED_WORDS = set(["help", "add", "list", "alter", "delete", "tidy"])
 
 
 class MessageFlow:
-    def __init__(self, message: discord.Message, title: str) -> None:
+    def __init__(
+        self, message: discord.Message, title: str, loop: asyncio.AbstractEventLoop
+    ) -> None:
         self.owner_id = message.author.id
         self.owner_mention = message.author.mention
         self.next_creation_step = None
         self.title = title
-        self.loop = asyncio.get_event_loop()
+        self.loop = loop
         self.status = 0
         self.data = {}
 
@@ -36,13 +38,15 @@ class MessageFlow:
 
 
 class TagAlterationFlow(MessageFlow):
-    def __init__(self, message: discord.Message) -> None:
-        super().__init__(message, "TagAlteration")
+    def __init__(self, message: discord.Message, **kwargs) -> None:
+        super().__init__(message, "TagAlteration", **kwargs)
 
 
 class TagCreationFlow(MessageFlow):
-    def __init__(self, message: discord.Message, sql_engine: sqlalchemy.Engine) -> None:
-        super().__init__(message, "TagCreation")
+    def __init__(
+        self, message: discord.Message, sql_engine: sqlalchemy.Engine, **kwargs
+    ) -> None:
+        super().__init__(message, "TagCreation", **kwargs)
         self.next_creation_step = self.step_1
         self.sql_engine = sql_engine
         self.loop.create_task(
