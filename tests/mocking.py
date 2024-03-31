@@ -1,6 +1,10 @@
 import asyncio
 
 
+async def gather_all_coroutines(coroutines):
+    await asyncio.gather(*coroutines)
+
+
 class MagicObject:
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
@@ -30,11 +34,13 @@ class Channel:
     def __init__(self, id=22222, type="public", **kwargs) -> None:
         self.id = id
         self.type = type
+        self.all_test_messages_sent = []
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    async def send(self, **kwargs):
-        self.test_message_sent = MagicObject(**kwargs)
+    async def send(self, content=None, **kwargs):
+        self.all_test_messages_sent.append(MagicObject(content=content, **kwargs))
+        self.latest_test_message_sent = MagicObject(content=content, **kwargs)
 
 
 class Author:
@@ -59,3 +65,25 @@ class TaskConsumingLoop:
             self.coro_list = []
 
         asyncio.run(gathering())
+
+
+class Interaction:
+    def __init__(self, id=44444, channel=None, author=None, **kwargs) -> None:
+        self.id = id
+        if not channel:
+            channel = Channel()
+        self.channel = channel
+        if not author:
+            author = Author()
+        self.response = InteractionResponse()
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+
+class InteractionResponse:
+    def __init__(self, **kwargs) -> None:
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+    async def send_message(self, content):
+        self.test_message_sent = content

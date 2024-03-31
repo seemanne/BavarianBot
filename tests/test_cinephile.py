@@ -115,13 +115,13 @@ class ClientTest(unittest.TestCase):
         client.cinephile(message_1)
         client.loop.run_tasks()
 
-        assert message_1.channel.test_message_sent.embed.title == "DUNE 2021"
+        assert message_1.channel.latest_test_message_sent.embed.title == "DUNE 2021"
         assert (
-            message_1.channel.test_message_sent.embed.url
+            message_1.channel.latest_test_message_sent.embed.url
             == "https://letterboxd.com/film/dune-2021"
         )
         assert (
-            message_1.channel.test_message_sent.embed.description
+            message_1.channel.latest_test_message_sent.embed.description
             == "This is parsed text from letterboxd"
         )
 
@@ -138,12 +138,12 @@ class ClientTest(unittest.TestCase):
         client.cinephile(message_1)
         client.loop.run_tasks()
 
-        assert message_1.channel.test_message_sent.embed.title == "DUNE"
+        assert message_1.channel.latest_test_message_sent.embed.title == "DUNE"
         assert (
-            message_1.channel.test_message_sent.embed.url
+            message_1.channel.latest_test_message_sent.embed.url
             == "https://letterboxd.com/film/dune"
         )
         assert (
-            message_1.channel.test_message_sent.embed.description
+            message_1.channel.latest_test_message_sent.embed.description
             == "This is parsed text from letterboxd"
         )
