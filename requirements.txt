@@ -1,4 +1,4 @@
-lxml==4.9.3
+lxml[html_clean]>=5.2.0
 newspaper3k~=0.2.8
 discord.py~=2.3.2
 fastapi~=0.104.1
