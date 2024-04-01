@@ -5,6 +5,7 @@ from fastapi import FastAPI
 import discord
 import src.client
 import src.orm
+import src.crud
 from src.models import Status
 
 LOG = logging.getLogger("uvicorn")
@@ -84,6 +85,21 @@ async def send_clown(channel: int, message: str):
 async def get_data(channel: int, n: int):
     data = await client.get_history(channel, n)
     return {"data": data}
+
+
+@app.get("/pond/fishers")
+async def get_pond_info():
+    data = client.pond.fishers
+    return {"fishers": data}
+
+
+@app.get("/pond/catches/{user_name}")
+async def get_catches(user_name):
+    return {
+        "fishes": src.crud.get_all_catches_by_username(
+            user_name=user_name, engine=client.sql_engine
+        )
+    }
 
 
 def log_callback(fut, coroutine_name, additional_message=""):

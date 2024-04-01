@@ -5,17 +5,25 @@ import datetime
 import random
 import asyncio
 
+import src.crud
+
 FISHING_REACTION_SECONDS = 60
 
 
 @discord.app_commands.command(name="fish", description="Start fishing in the pond")
 async def start_fishing(interaction: discord.Interaction):
-    is_there, _ = interaction.client.pond.get_fisher(interaction.user.name)
+    is_there, possibly_outdated_timestamp = interaction.client.pond.get_fisher(
+        interaction.user.name
+    )
     if is_there:
-        await interaction.response.send_message(
-            f"Hey {interaction.user.name}, it looks like you're already using your rod. Maybe try to get another one using /get_rod?"
-        )
-        return
+        time_diff = abs(possibly_outdated_timestamp - datetime.datetime.utcnow())
+        if time_diff < datetime.timedelta(seconds=FISHING_REACTION_SECONDS):
+            await interaction.response.send_message(
+                f"Hey {interaction.user.name}, it looks like you're already using your rod. Maybe try to get another one using /get_rod?"
+            )
+            return
+        else:
+            interaction.client.pond.pop_fisher(interaction.user.name)
     await interaction.response.send_message(
         f"{interaction.user.name} has started fishing!"
     )
@@ -71,6 +79,12 @@ async def reel_fish(interaction: discord.Interaction):
 
     fish = interaction.client.pond.get_fish()
     interaction.client.pond.refill_fish()
+    src.crud.save_fish(
+        interaction.user.name,
+        fish.weight,
+        fish.n_times_fed,
+        interaction.client.sql_engine,
+    )
     await interaction.response.send_message(
         fish.get_catch_message(interaction.user.mention)
     )

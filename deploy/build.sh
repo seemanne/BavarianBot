@@ -1,1 +1,1 @@
-podman build -f ./CONTAINERFILE -t bavarianbot:latest .
+podman build -f ./CONTAINERFILE_BOT -t bavarianbot:latest .
