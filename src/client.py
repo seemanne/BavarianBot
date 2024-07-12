@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import random
 import logging
 import re
@@ -52,6 +53,7 @@ class Maggus(discord.Client):
         self.snail_cache = src.datastructures.LRUCache(1000)
         self.snail_votes = {}
         self.countdown_cache = None
+        self.most_recent_message_id = None
 
     def __repr__(self) -> str:
         return "BavarianClient"
@@ -81,9 +83,20 @@ class Maggus(discord.Client):
             f"https://discord.com/api/webhooks/1189583746815508510/{src.auth.WEBHOOK}",
             client=self,
         )
-        # This copies the global commands over to your guild.
-        # self.tree.copy_global_to(guild=my_secrets.MY_GUILD)
-        # await self.tree.sync(guild=my_secrets.MY_GUILD)
+        # keep strong ref to heartbeat to avoid gc
+        self.hearbeat_task = self.loop.create_task(self.heartbeat_loop())
+    
+    async def heartbeat_loop(self):
+
+        if self.is_dev:
+            heartbeat_interval = 5
+        else:
+            heartbeat_interval = 60
+        while True:
+
+            await asyncio.sleep(heartbeat_interval)
+            now_str = datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds")
+            self.log.info(f"HEARTBEAT: {now_str} tweets: {len(self.snail_cache)} fish: {len(self.pond.fishes)} most_recent_message: {self.most_recent_message_id}")
 
     async def on_message(self, message: discord.Message):
         if message.author == self.user:
@@ -94,6 +107,8 @@ class Maggus(discord.Client):
 
         if not self.activated:
             return
+        
+        self.most_recent_message_id = message.id
 
         # self.fix_tweet(message)
         self.process_message_hooks(message)
