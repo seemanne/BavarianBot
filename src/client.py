@@ -113,9 +113,9 @@ class Maggus(discord.Client):
         # self.fix_tweet(message)
         self.process_message_hooks(message)
         self.cinephile(message)
-        self.tagger(message)
+        # self.tagger(message)
         self.countdown_check(message)
-        # await self.snailcheck(message)
+        await self.snailcheck(message)
 
     async def on_error(self, event_method: str, /, *args: Any, **kwargs: Any) -> None:
         self.log.info("Ignoring exception in %s", event_method)
@@ -135,7 +135,7 @@ class Maggus(discord.Client):
         if not is_x_link:
             return
         if (
-            not link_info and random.random() < 0.8 and not self.is_dev
+            not link_info and random.random() < 0.95 and not self.is_dev
         ) or self.snail_lock:
             return
 
@@ -152,13 +152,19 @@ class Maggus(discord.Client):
         await asyncio.sleep(30)
 
         if snail:
-            await message.channel.send(
-                f"It was indeed snail, correct guesses: {self.snail_votes.get('yes')}"
-            )
+            if not self.snail_votes.get("yes"):
+                await message.channel.send(f"This xeet was snail, but nobody guessed it correctly. Good job {message.author.name}!")
+            else:
+                await message.channel.send(
+                    f"It was indeed snail, correct guesses: {self.snail_votes.get('yes')}"
+                )
         else:
-            await message.channel.send(
-                f"Lol, I tricked you. This Xeet wasn't snail! Correct guesses: {self.snail_votes.get('no')}"
-            )
+            if not self.snail_votes.get("no"):
+                await message.channel.send("This xeet was not snail, but you all thought it was.")
+            else:
+                await message.channel.send(
+                    f"Lol, I tricked you. This Xeet wasn't snail! Correct guesses: {self.snail_votes.get('no')}"
+                )
 
         self.snail_lock = False
 
