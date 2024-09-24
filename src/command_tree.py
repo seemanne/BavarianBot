@@ -86,6 +86,17 @@ async def get_config(interaction: discord.Interaction, key: str):
         f"Key {key} has value {value}", ephemeral=True
     )
 
+@discord.app_commands.command(name="reset_count")
+async def reset_count(interaction: discord.Interaction):
+
+    if interaction.user.name != "karlpopper":
+        await interaction.response.send_message("Access denied", ephemeral=True)
+        return
+
+    interaction.client.countdown_cache = None
+    await interaction.response.send_message(
+        f"Countdown cache has been reset", ephemeral=True
+    )
 
 LIST_OF_COMMANDS = [
     start_fishing,
@@ -96,4 +107,5 @@ LIST_OF_COMMANDS = [
     get_config,
     get_rod,
     feedback,
+    reset_count,
 ]
