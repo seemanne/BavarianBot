@@ -142,7 +142,7 @@ class SnailState:
         )
         edit_content = cached_item.describe()
         if is_snail:
-            await reply.edit(content=edit_content)
+            await reply.edit(content=edit_content, view=None)
         else:
             await reply.delete()
         await message.channel.send(reply_content)
@@ -154,16 +154,16 @@ class SnailButtons(discord.ui.View):
         self.tweet_id = tweet_id
 
     @discord.ui.button(label="Snail!", style=discord.ButtonStyle.red)
-    async def snail_button(self, button_ctx, interaction_ctx: discord.Interaction):
-        reply = interaction_ctx.client.snaiL_state.vote(
+    async def snail_button(self, interaction_ctx: discord.Interaction, button_ctx: discord.Button):
+        reply = interaction_ctx.client.snail_state.vote(
             self.tweet_id, interaction_ctx.user.mention, True
         )
         await interaction_ctx.response.send_message(reply, ephemeral=True)
         return
 
     @discord.ui.button(label="Not Snail!", style=discord.ButtonStyle.green)
-    async def nosnail_button(self, button_ctx, interaction_ctx: discord.Interaction):
-        reply = interaction_ctx.client.snaiL_state.vote(
+    async def nosnail_button(self, interaction_ctx: discord.Interaction, button_ctx: discord.Button):
+        reply = interaction_ctx.client.snail_state.vote(
             self.tweet_id, interaction_ctx.user.mention, False
         )
         await interaction_ctx.response.send_message(reply, ephemeral=True)
