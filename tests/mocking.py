@@ -25,6 +25,9 @@ class Message:
 
     async def reply(self, reply=None, **kwargs):
         self.test_reply = MagicObject(reply=reply, **kwargs)
+    
+    async def delete(self, **kwargs):
+        self.is_deleted = True
 
     async def add_reaction(self, object=None, **kwargs):
         self.test_reactions_added = MagicObject(object=object, **kwargs)
