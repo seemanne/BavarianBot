@@ -120,9 +120,26 @@ class Maggus(discord.Client):
         # self.tagger(message)
         self.countdown_check(message)
         await self.snail_state.check_snail(message)
+    
+    async def _run_event(
+        self,
+        coro,
+        event_name: str,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        try:
+            await coro(*args, **kwargs)
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            try:
+                await self.on_error(event_name, e, *args, **kwargs)
+            except asyncio.CancelledError:
+                pass
 
-    async def on_error(self, event_method: str, /, *args: Any, **kwargs: Any) -> None:
-        self.log.info("Ignoring exception in %s", event_method)
+    async def on_error(self, event_method: str, exception: Exception, /, *args: Any, **kwargs: Any) -> None:
+        self.log.info(f"Ignoring exception in {event_method}: {str(exception)}")
 
     def debug(self, message: discord.Message, response: str):
         if self.is_dev:
