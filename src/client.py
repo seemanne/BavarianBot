@@ -32,7 +32,9 @@ class Maggus(discord.Client):
     ):
         if in_test:
             self.loop = test_loop
+            self.in_test = True
         else:
+            self.in_test = False
             super().__init__(intents=intents, **options)
             self.tree = app_commands.CommandTree(self)
         self.log = log
