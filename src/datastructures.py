@@ -23,6 +23,9 @@ class LRUCache:
                 self.cache.popitem(last=False)
             self.cache[key] = value
 
+    def __len__(self):
+        return len(self.cache)
+
 
 class RandomStack:
     def __init__(self) -> None:

@@ -62,6 +62,9 @@ async def no_snail(interaction: discord.Interaction):
 
 @discord.app_commands.command(name="set_config")
 async def set_config(interaction: discord.Interaction, key: str, value: str):
+    if interaction.user.name != "karlpopper":
+        await interaction.response.send_message("Access denied", ephemeral=True)
+        return
     value = str(value)
     key = str(key)
 
@@ -71,11 +74,26 @@ async def set_config(interaction: discord.Interaction, key: str, value: str):
 
 @discord.app_commands.command(name="get_config")
 async def get_config(interaction: discord.Interaction, key: str):
+    if interaction.user.name != "karlpopper":
+        await interaction.response.send_message("Access denied", ephemeral=True)
+        return
     key = str(key)
 
     value = src.crud.get_config(key, interaction.client.sql_engine)
     await interaction.response.send_message(
         f"Key {key} has value {value}", ephemeral=True
+    )
+
+
+@discord.app_commands.command(name="reset_count")
+async def reset_count(interaction: discord.Interaction):
+    if interaction.user.name != "karlpopper":
+        await interaction.response.send_message("Access denied", ephemeral=True)
+        return
+
+    interaction.client.countdown_cache = None
+    await interaction.response.send_message(
+        f"Countdown cache has been reset", ephemeral=True
     )
 
 
@@ -88,4 +106,5 @@ LIST_OF_COMMANDS = [
     get_config,
     get_rod,
     feedback,
+    reset_count,
 ]
