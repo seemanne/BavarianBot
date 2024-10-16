@@ -52,8 +52,7 @@ class Maggus(discord.Client):
         self.message_hooks: dict[int, src.tagger.TagCreationFlow] = {}
 
         self.pond = src.fishing.pond.Pond()
-        self.snail_cache = src.datastructures.LRUCache(1000)
-        self.snail_votes = {}
+        self.snail_state = src.snail.SnailState(10000)
         self.countdown_cache = None
         self.most_recent_message_id = None
 
@@ -117,7 +116,7 @@ class Maggus(discord.Client):
         self.cinephile(message)
         # self.tagger(message)
         self.countdown_check(message)
-        await self.snailcheck(message)
+        await self.snail_state.check_snail(message)
 
     async def on_error(self, event_method: str, /, *args: Any, **kwargs: Any) -> None:
         self.log.info("Ignoring exception in %s", event_method)
@@ -130,45 +129,6 @@ class Maggus(discord.Client):
 
         return
 
-    async def snailcheck(self, message: discord.Message):
-        is_x_link, link_info = src.snail.snail_check(
-            message=message, cache=self.snail_cache
-        )
-        if not is_x_link:
-            return
-        if (
-            not link_info and random.random() < 0.95 and not self.is_dev
-        ) or self.snail_lock:
-            return
-
-        if link_info:
-            snail = True
-        else:
-            snail = False
-
-        self.snail_lock = True
-        self.snail_votes = {"yes": set(), "no": set()}
-        await message.reply(
-            "Ooooh looks like we're back with another episode of '/snail' or '/notsnail'. You all have 30 seconds to vote!"
-        )
-        await asyncio.sleep(30)
-
-        if snail:
-            if not self.snail_votes.get("yes"):
-                await message.channel.send(f"This xeet was snail, but nobody guessed it correctly. Good job {message.author.name}!")
-            else:
-                await message.channel.send(
-                    f"It was indeed snail, correct guesses: {self.snail_votes.get('yes')}"
-                )
-        else:
-            if not self.snail_votes.get("no"):
-                await message.channel.send("This xeet was not snail, but you all thought it was.")
-            else:
-                await message.channel.send(
-                    f"Lol, I tricked you. This Xeet wasn't snail! Correct guesses: {self.snail_votes.get('no')}"
-                )
-
-        self.snail_lock = False
 
     def cinephile(self, message):
         src.cinephile.cinema_check(message, self.loop)
