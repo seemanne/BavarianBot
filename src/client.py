@@ -88,16 +88,18 @@ class Maggus(discord.Client):
         self.hearbeat_task = self.loop.create_task(self.heartbeat_loop())
     
     async def heartbeat_loop(self):
-
+        if self.in_test:
+            return
         if self.is_dev:
             heartbeat_interval = 5
         else:
             heartbeat_interval = 60
+        self.log.info("Starting heartbeat")
         while True:
 
             await asyncio.sleep(heartbeat_interval)
             now_str = datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds")
-            self.log.info(f"HEARTBEAT: {now_str} tweets: {len(self.snail_cache)} fish: {len(self.pond.fishes)} most_recent_message: {self.most_recent_message_id} countdown_cache: {self.countdown_cache}")
+            self.log.info(f"HEARTBEAT: {now_str} tweets: {len(self.snail_state.snail_cache)} fish: {len(self.pond.fishes)} most_recent_message: {self.most_recent_message_id} countdown_cache: {self.countdown_cache}")
 
     async def on_message(self, message: discord.Message):
         if message.author == self.user:
