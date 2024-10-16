@@ -62,7 +62,6 @@ async def no_snail(interaction: discord.Interaction):
 
 @discord.app_commands.command(name="set_config")
 async def set_config(interaction: discord.Interaction, key: str, value: str):
-
     if interaction.user.name != "karlpopper":
         await interaction.response.send_message("Access denied", ephemeral=True)
         return
@@ -75,7 +74,6 @@ async def set_config(interaction: discord.Interaction, key: str, value: str):
 
 @discord.app_commands.command(name="get_config")
 async def get_config(interaction: discord.Interaction, key: str):
-
     if interaction.user.name != "karlpopper":
         await interaction.response.send_message("Access denied", ephemeral=True)
         return
@@ -86,9 +84,9 @@ async def get_config(interaction: discord.Interaction, key: str):
         f"Key {key} has value {value}", ephemeral=True
     )
 
+
 @discord.app_commands.command(name="reset_count")
 async def reset_count(interaction: discord.Interaction):
-
     if interaction.user.name != "karlpopper":
         await interaction.response.send_message("Access denied", ephemeral=True)
         return
@@ -97,6 +95,7 @@ async def reset_count(interaction: discord.Interaction):
     await interaction.response.send_message(
         f"Countdown cache has been reset", ephemeral=True
     )
+
 
 LIST_OF_COMMANDS = [
     start_fishing,

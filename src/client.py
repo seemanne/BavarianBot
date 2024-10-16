@@ -86,7 +86,7 @@ class Maggus(discord.Client):
         )
         # keep strong ref to heartbeat to avoid gc
         self.hearbeat_task = self.loop.create_task(self.heartbeat_loop())
-    
+
     async def heartbeat_loop(self):
         if self.in_test:
             return
@@ -96,10 +96,11 @@ class Maggus(discord.Client):
             heartbeat_interval = 60
         self.log.info("Starting heartbeat")
         while True:
-
             await asyncio.sleep(heartbeat_interval)
             now_str = datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds")
-            self.log.info(f"HEARTBEAT: {now_str} tweets: {len(self.snail_state.snail_cache)} fish: {len(self.pond.fishes)} most_recent_message: {self.most_recent_message_id} countdown_cache: {self.countdown_cache}")
+            self.log.info(
+                f"HEARTBEAT: {now_str} tweets: {len(self.snail_state.snail_cache)} fish: {len(self.pond.fishes)} most_recent_message: {self.most_recent_message_id} countdown_cache: {self.countdown_cache}"
+            )
 
     async def on_message(self, message: discord.Message):
         if message.author == self.user:
@@ -110,7 +111,7 @@ class Maggus(discord.Client):
 
         if not self.activated:
             return
-        
+
         self.most_recent_message_id = message.id
 
         # self.fix_tweet(message)
@@ -130,7 +131,6 @@ class Maggus(discord.Client):
             self.log.debug(message)
 
         return
-
 
     def cinephile(self, message):
         src.cinephile.cinema_check(message, self.loop)

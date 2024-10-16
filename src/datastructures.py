@@ -22,7 +22,7 @@ class LRUCache:
             if len(self.cache) >= self.capacity:
                 self.cache.popitem(last=False)
             self.cache[key] = value
-    
+
     def __len__(self):
         return len(self.cache)
 
