@@ -14,6 +14,7 @@ class MagicObject:
 class Message:
     def __init__(self, id=11111, channel=None, author=None, **kwargs):
         self.id = id
+        self.edits = []
         if not channel:
             channel = Channel()
         self.channel = channel
@@ -22,9 +23,13 @@ class Message:
         self.author = author
         for key, value in kwargs.items():
             setattr(self, key, value)
+    
+    async def edit(self, **kwargs):
+        self.edits.append(kwargs)
 
     async def reply(self, reply=None, **kwargs):
         self.test_reply = MagicObject(reply=reply, **kwargs)
+        return Message()
     
     async def delete(self, **kwargs):
         self.is_deleted = True

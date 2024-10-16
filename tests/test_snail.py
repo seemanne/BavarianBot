@@ -12,6 +12,10 @@ def fake_random(res):
         return res
     return func
 
+async def fake_sleep(time):
+
+    return
+
 
 class ClientTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -22,6 +26,7 @@ class ClientTest(unittest.TestCase):
         pass
 
     @patch("random.random", new=fake_random(0.1))
+    @patch("asyncio.sleep", new=fake_sleep)
     def test_snail_negative(self):
         message = Message(
             content="https://www.youtube.com/watch?v=dQw4w9WgXcQ&pp=ygUXbmV2ZXIgZ29ubmEgZ2l2ZSB5b3UgdXA%3D",
@@ -32,6 +37,7 @@ class ClientTest(unittest.TestCase):
         assert len(self.snail_state.snail_cache) == 0
 
     @patch("random.random", new=fake_random(0.1))
+    @patch("asyncio.sleep", new=fake_sleep)
     def test_snail_not_snail(self):
         message = Message(
             content="https://twitter.com/tekbog/status/1738295383749488720",
@@ -43,6 +49,7 @@ class ClientTest(unittest.TestCase):
         assert len(self.snail_state.snail_cache) == 1
 
     @patch("random.random", new=fake_random(0.1))
+    @patch("asyncio.sleep", new=fake_sleep)
     def test_snail_is_snail(self):
         message = Message(
             content="https://twitter.com/tekbog/status/1738295383749488720",
