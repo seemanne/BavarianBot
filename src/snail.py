@@ -6,7 +6,8 @@ from dataclasses import dataclass
 import discord
 
 import src.datastructures
-
+import src.crud
+import src.orm
 
 def check_for_twitter_link(message: str):
     matchli = re.match(r"https://[a-zA-Z]*\.com/.*/status/(\d*)", message)
@@ -27,6 +28,11 @@ def snail_check(message: discord.Message, cache: src.datastructures.LRUCache):
         return True, None
 
     return True, cached_item
+
+
+def user_mention_to_id(mention: str):
+
+    return int(mention.strip("<@>"))
 
 
 @dataclass
@@ -65,7 +71,8 @@ class PollingStation:
         self.registered_voters.add(voter_name)
         return True
 
-    def count_ballots(self, is_snail):
+    def count_ballots(self, is_snail, sql_engine):
+        snail_list = []
         if is_snail:
             res = "This xeet was snail!\n"
         else:
@@ -75,13 +82,26 @@ class PollingStation:
         if self.yes_votes:
             res += "Snail Alliance: "
             for voter in self.yes_votes:
+                snail_list.append(
+                    src.orm.SnailBet(
+                        user_id = user_mention_to_id(voter),
+                        result = int(is_snail),
+                    )
+                )
                 res += f"{voter} "
             res += "\n"
         if self.no_votes:
             res += "Novelty Coalition: "
             for voter in self.no_votes:
+                snail_list.append(
+                    src.orm.SnailBet(
+                        user_id = user_mention_to_id(voter),
+                        result = int(not is_snail),
+                    )
+                )
                 res += f"{voter} "
             res += "\n"
+        src.crud.bulk_insert_snail_votes(snail_list, sql_engine)
         return res
 
 
@@ -89,9 +109,11 @@ class SnailState:
     def __init__(
         self,
         cache_size,
+        sql_engine
     ) -> None:
         self.snail_cache = src.datastructures.LRUCache(cache_size)
         self.active_snail_votes: dict[str, PollingStation] = {}
+        self.sql_engine = sql_engine
 
     def vote(self, tweet_id, voter_name, vote_snail):
         polling_station = self.active_snail_votes.get(tweet_id, None)
@@ -138,7 +160,7 @@ class SnailState:
         )
         await asyncio.sleep(60)
         reply_content = self.active_snail_votes.pop(cached_item.tweet_id).count_ballots(
-            is_snail
+            is_snail, self.sql_engine
         )
         edit_content = cached_item.describe()
         if is_snail:

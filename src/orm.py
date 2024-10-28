@@ -36,6 +36,12 @@ class SnailBet(Base):
     result = Column(Integer)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
 
+    def to_dict_for_insert(self):
+        return {
+            "user_id": self.user_id,
+            "result": self.result
+        }
+
 
 class FishScore(Base):
     __tablename__ = "fishscore"

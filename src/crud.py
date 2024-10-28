@@ -3,7 +3,7 @@ import sqlalchemy
 import discord
 from sqlalchemy import select, desc, insert, update
 from sqlalchemy.sql import func, text
-from src.orm import Tag, Config, FishResult
+from src.orm import Tag, Config, FishResult, SnailBet
 
 
 def add_tag(tag_data: dict, engine: sqlalchemy.Engine):
@@ -123,3 +123,15 @@ def get_all_catches_by_username(user_name: str, engine: sqlalchemy.Engine):
         count += 1
 
     return ret
+
+
+def bulk_insert_snail_votes(snail_list: list[SnailBet], engine: sqlalchemy.Engine):
+
+    with engine.connect() as conn:
+        query = (
+            insert(SnailBet).values(
+                [bet.to_dict_for_insert() for bet in snail_list]
+            )
+        )
+        conn.execute(query)
+        conn.commit()

@@ -52,7 +52,7 @@ class Maggus(discord.Client):
         self.message_hooks: dict[int, src.tagger.TagCreationFlow] = {}
 
         self.pond = src.fishing.pond.Pond()
-        self.snail_state = src.snail.SnailState(10000)
+        self.snail_state = src.snail.SnailState(10000, self.sql_engine)
         self.countdown_cache = None
         self.most_recent_message_id = None
 
