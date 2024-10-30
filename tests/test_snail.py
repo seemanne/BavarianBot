@@ -39,6 +39,7 @@ class ClientTest(unittest.TestCase):
             jump_url="message_jump_url"
         )
         self.loop.create_task(self.snail_state.check_snail(message))
+        self.loop.run_tasks()
         assert len(self.snail_state.snail_cache) == 0
 
     @patch("random.random", new=fake_random(0.1))
