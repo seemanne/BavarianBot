@@ -162,7 +162,7 @@ class SnailState:
     def load_from_db(self):
         rows = src.crud.load_snail_cache(self.snail_cache.capacity, self.sql_engine)
         for row in reversed(rows):
-            cached_xeet = CachedXeet.from_state_cache(row[0])
+            cached_xeet = CachedXeet.from_state_cache(row)
             self.snail_cache.put(cached_xeet.tweet_id, cached_xeet)
 
 
