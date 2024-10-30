@@ -43,6 +43,14 @@ class SnailBet(Base):
         }
 
 
+class SnailVote(Base):
+    __tablename__ = "snailvote"
+    id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
+    xeet_poster = Column(String)
+    is_snail = Column(Integer)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+
+
 class FishScore(Base):
     __tablename__ = "fishscore"
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
