@@ -1,7 +1,9 @@
 import unittest
 from unittest.mock import patch
+import sqlalchemy
 
-from src.snail import SnailState, check_for_twitter_link
+from src.orm import init_db
+from src.snail import SnailState, check_for_twitter_link, PollingStation
 from src.datastructures import LRUCache
 from .mocking import Message, Author, TaskConsumingLoop
 
@@ -19,7 +21,8 @@ async def fake_sleep(time):
 
 class ClientTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.snail_state = SnailState(5)
+        self.sql_engine = sqlalchemy.create_engine("sqlite:///:memory:")
+        self.snail_state = SnailState(5, self.sql_engine)
         self.loop = TaskConsumingLoop()
 
     def tearDown(self) -> None:
@@ -61,3 +64,26 @@ class ClientTest(unittest.TestCase):
         self.loop.run_tasks()
         assert len(self.snail_state.snail_cache) == 1
         assert self.snail_state.snail_cache.get("1738295383749488720").post_count == 2
+
+    def test_ballot_stuffing(self):
+        
+        polling_station = PollingStation()
+        voter = "<@123456789>"
+        polling_station.vote_yes(voter)
+        assert not polling_station.vote_no(voter)
+
+    def test_ballot_counting(self):
+        
+        polling_station = PollingStation()
+        voter_1 = "<@1234567891>"
+        voter_2 = "<@1234567892>"
+        voter_3 = "<@1234567893>"
+        polling_station.vote_yes(voter_1)
+        polling_station.vote_no(voter_2)
+        polling_station.vote_no(voter_3)
+
+        res = polling_station.count_ballots(False, self.sql_engine)
+        assert "was not snail!" in res
+        assert voter_1 in res
+        assert voter_2 in res
+        assert voter_3 in res
