@@ -113,5 +113,4 @@ class ClientTest(unittest.TestCase):
         new_state.load_from_db()
 
         assert len(new_state.snail_cache) == 2
-
-        
+        assert new_state.snail_cache.cache.values()[0] == self.snail_state.snail_cache.cache.values()[0]
