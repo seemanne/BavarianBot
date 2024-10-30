@@ -102,8 +102,9 @@ class ClientTest(unittest.TestCase):
             tweet_id="5678",
             initial_poster_name="poster_2",
             initial_jump_url="jump_url_2",
-            initial_post_time=datetime.datetime.utcnow() + datetime.timedelta(minutes=1)
         )
+        xeet_2.initial_post_time=datetime.datetime.utcnow() + datetime.timedelta(minutes=1)
+        
 
         self.snail_state.snail_cache.put(xeet_1.tweet_id, xeet_1)
         self.snail_state.snail_cache.put(xeet_2.tweet_id, xeet_2)
