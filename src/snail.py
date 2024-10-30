@@ -63,13 +63,14 @@ class CachedXeet:
     @classmethod
     def from_state_cache(cls, snail_cache: src.orm.SnailStateCache):
 
-        return cls(
+        ret = cls(
             tweet_id=snail_cache.tweet_id,
-            initial_post_name=snail_cache.initial_poster_name,
+            initial_poster_name=snail_cache.initial_poster_name,
             initial_jump_url=snail_cache.initial_jump_url,
-            initial_post_time=snail_cache.initial_post_time,
-            post_count=snail_cache.post_count
         )
+        ret.initial_post_time=snail_cache.initial_post_time,
+        ret.post_count=snail_cache.post_count
+        return ret
 
 
 class PollingStation:
