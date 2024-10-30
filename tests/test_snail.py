@@ -22,6 +22,7 @@ async def fake_sleep(time):
 class ClientTest(unittest.TestCase):
     def setUp(self) -> None:
         self.sql_engine = sqlalchemy.create_engine("sqlite:///:memory:")
+        init_db(self.sql_engine)
         self.snail_state = SnailState(5, self.sql_engine)
         self.loop = TaskConsumingLoop()
 
