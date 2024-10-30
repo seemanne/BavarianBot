@@ -210,8 +210,12 @@ class Maggus(discord.Client):
 
     def deactivate(self):
         self.activated = False
+        self.snail_state.dump_to_db()
+        self.log.info(f"Dumped {len(self.snail_state.snail_cache)} cached snails to db")
 
     def activate(self):
+        self.snail_state.load_from_db()
+        self.log.info(f"Loaded {len(self.snail_state.snail_cache)} cached snails from db")
         self.activated = True
 
     def process_message_hooks(self, message: discord.Message):
