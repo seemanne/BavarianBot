@@ -51,6 +51,15 @@ class SnailVote(Base):
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
 
 
+class SnailStateCache(Base):
+    __tablename__ = "snailstate"
+    id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
+    tweet_id = Column(String)
+    initial_poster_name = Column(String)
+    initial_jump_url = Column(String)
+    initial_post_time = Column(DateTime)
+    post_count = Column(Integer)
+
 class FishScore(Base):
     __tablename__ = "fishscore"
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True)

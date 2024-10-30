@@ -3,7 +3,7 @@ import sqlalchemy
 import discord
 from sqlalchemy import select, desc, insert, update
 from sqlalchemy.sql import func, text
-from src.orm import Tag, Config, FishResult, SnailBet, SnailVote
+from src.orm import Tag, Config, FishResult, SnailBet, SnailVote, SnailStateCache
 
 
 def add_tag(tag_data: dict, engine: sqlalchemy.Engine):
@@ -148,3 +148,27 @@ def save_snail_vote(xeet_poster: str, is_snail: bool, engine: sqlalchemy.Engine)
         )
         conn.execute(query)
         conn.commit()
+
+
+def dump_snail_cache(caches: list[dict], engine: sqlalchemy.Engine):
+
+    with engine.connect() as conn:
+        query = (
+            insert(SnailStateCache).values(
+                caches
+            )
+        )
+        conn.execute(query)
+        conn.commit()
+
+
+def load_snail_cache(limit: int, engine: sqlalchemy.Engine):
+
+    with engine.connect() as conn:
+        query = (
+            select(SnailStateCache)
+            .order_by(desc(SnailStateCache.initial_post_time))
+            .limit(limit)
+        )
+        res = conn.execute(query).all()
+    return res

@@ -49,6 +49,27 @@ class CachedXeet:
     def describe(self):
         desc = f"This Xeet was first posted by {self.initial_poster_name}. Use this link to jump to their message and check the discussion: {self.initial_jump_url}\n"
         return desc
+    
+    def to_dict(self):
+
+        return {
+            "tweet_id": self.tweet_id,
+            "initial_poster_name": self.initial_poster_name,
+            "initial_jump_url": self.initial_jump_url,
+            "initial_post_time": self.initial_post_time,
+            "post_count": self.post_count
+        }
+    
+    @classmethod
+    def from_state_cache(cls, snail_cache: src.orm.SnailStateCache):
+
+        return cls(
+            tweet_id=snail_cache.tweet_id,
+            initial_post_name=snail_cache.initial_poster_name,
+            initial_jump_url=snail_cache.initial_jump_url,
+            initial_post_time=snail_cache.initial_post_time,
+            post_count=snail_cache.post_count
+        )
 
 
 class PollingStation:
@@ -128,6 +149,22 @@ class SnailState:
             return f"Your ballot has been cast successfully"
         else:
             return f"Sorry, your vote has been rejected for suspected ballot stuffing"
+    
+
+    def dump_to_db(self):
+        caches = [
+            xeet.to_dict() for xeet in self.snail_cache.cache.values()
+        ]
+        if caches:
+            src.crud.dump_snail_cache(caches, self.sql_engine)
+    
+
+    def load_from_db(self):
+        rows = src.crud.load_snail_cache(self.snail_cache.capacity, self.sql_engine)
+        for row in reversed(rows):
+            cached_xeet = CachedXeet.from_state_cache(row[0])
+            self.snail_cache.put(cached_xeet.tweet_id, cached_xeet)
+
 
     async def check_snail(self, message: discord.Message):
         has_link, tweet_id = check_for_twitter_link(message.content)

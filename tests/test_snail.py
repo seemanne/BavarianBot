@@ -1,9 +1,10 @@
+import datetime
 import unittest
 from unittest.mock import patch
 import sqlalchemy
 
 from src.orm import init_db
-from src.snail import SnailState, check_for_twitter_link, PollingStation
+from src.snail import SnailState, check_for_twitter_link, PollingStation, CachedXeet
 from src.datastructures import LRUCache
 from .mocking import Message, Author, TaskConsumingLoop
 
@@ -88,3 +89,28 @@ class ClientTest(unittest.TestCase):
         assert voter_1 in res
         assert voter_2 in res
         assert voter_3 in res
+    
+
+    def test_dump_and_load(self):
+
+        xeet_1 = CachedXeet(
+            tweet_id="1234",
+            initial_poster_name="poster_1",
+            initial_jump_url="jump_url_1",
+        )
+        xeet_2 = CachedXeet(
+            tweet_id="5678",
+            initial_poster_name="poster_2",
+            initial_jump_url="jump_url_2",
+            initial_post_time=datetime.datetime.utcnow() + datetime.timedelta(minutes=1)
+        )
+
+        self.snail_state.snail_cache.put(xeet_1.tweet_id, xeet_1)
+        self.snail_state.snail_cache.put(xeet_2.tweet_id, xeet_2)
+        self.snail_state.dump_to_db()
+        new_state = SnailState(5, self.sql_engine)
+        new_state.load_from_db()
+
+        assert len(new_state.snail_cache) == 2
+
+        
