@@ -153,6 +153,7 @@ class SnailState:
         if cached_item.tweet_id in self.active_snail_votes.keys():
             await message.reply("You got to be kidding me")
             return
+        src.crud.save_snail_vote(message.author.name, is_snail, self.sql_engine)
         self.active_snail_votes[cached_item.tweet_id] = PollingStation()
         reply = await message.reply(
             "Looks like we're due for another snailidental election. You all have 60 seconds to vote!\n",

@@ -3,7 +3,7 @@ import sqlalchemy
 import discord
 from sqlalchemy import select, desc, insert, update
 from sqlalchemy.sql import func, text
-from src.orm import Tag, Config, FishResult, SnailBet
+from src.orm import Tag, Config, FishResult, SnailBet, SnailVote
 
 
 def add_tag(tag_data: dict, engine: sqlalchemy.Engine):
@@ -131,6 +131,19 @@ def bulk_insert_snail_votes(snail_list: list[SnailBet], engine: sqlalchemy.Engin
         query = (
             insert(SnailBet).values(
                 [bet.to_dict_for_insert() for bet in snail_list]
+            )
+        )
+        conn.execute(query)
+        conn.commit()
+
+
+def save_snail_vote(xeet_poster: str, is_snail: bool, engine: sqlalchemy.Engine):
+
+    with engine.connect() as conn:
+        query = (
+            insert(SnailVote).values(
+                xeet_poster=xeet_poster,
+                is_snail=int(is_snail)
             )
         )
         conn.execute(query)
