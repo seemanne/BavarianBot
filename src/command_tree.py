@@ -96,6 +96,25 @@ async def reset_count(interaction: discord.Interaction):
         f"Countdown cache has been reset", ephemeral=True
     )
 
+@discord.app_commands.command(name="sql")
+async def sql(interaction: discord.Interaction, sql_string: str):
+    if interaction.user.name != "karlpopper":
+        await interaction.response.send_message("Access denied", ephemeral=True)
+        return
+    
+    response = src.crud.raw_sql_execution(sql_string)
+    await interaction.response.send_message(
+        "Received the following db response:\n" + response
+    )
+
+@discord.app_commands.command(name="set_logging")
+async def set_logging(interaction: discord.Interaction, log_level: int):
+    if interaction.user.name != "karlpopper":
+        await interaction.response.send_message("Access denied", ephemeral=True)
+        return
+
+    interaction.client.log.setLevel(log_level)
+    await interaction.response.send_message(f"Set log level to {log_level}", ephemeral=True)
 
 LIST_OF_COMMANDS = [
     start_fishing,
@@ -107,4 +126,6 @@ LIST_OF_COMMANDS = [
     get_rod,
     feedback,
     reset_count,
+    sql,
+    set_logging,
 ]

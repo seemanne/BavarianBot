@@ -172,3 +172,15 @@ def load_snail_cache(limit: int, engine: sqlalchemy.Engine):
         )
         res = conn.execute(query).all()
     return res
+
+
+def raw_sql_execution(query: str, engine: sqlalchemy.Engine):
+
+    with engine.connect() as conn:
+
+        res = conn.execute(text(query)).all()
+    
+    msg = ""
+    for row in res:
+        msg += f"{str(row)}\n"
+    return msg
