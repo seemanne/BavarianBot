@@ -68,10 +68,11 @@ class CachedXeet:
             initial_poster_name=snail_cache.initial_poster_name,
             initial_jump_url=snail_cache.initial_jump_url,
         )
-        print(snail_cache.initial_post_time)
-        print(type(snail_cache.initial_post_time))
         ret.initial_post_time=snail_cache.initial_post_time,
         ret.post_count=snail_cache.post_count
+        print(ret)
+        print(type(ret.initial_post_time))
+        print(ret.initial_post_time)
         return ret
 
 
