@@ -75,7 +75,7 @@ class Maggus(discord.Client):
 
         self.tree.copy_global_to(guild=discord.Object(id=guild_id))
         await self.tree.sync(guild=discord.Object(id=guild_id))
-        self.log.info("COMMAND TREE SYNCED SUCCESSFULLY")
+        self.log.info("Synced command tree")
 
         self.pond.populate_pond_and_start_ecosystem()
         self.log.info("Started pond ecosystem")
@@ -139,7 +139,7 @@ class Maggus(discord.Client):
                 pass
 
     async def on_error(self, event_method: str, exception: Exception, /, *args: Any, **kwargs: Any) -> None:
-        self.log.info(f"Ignoring exception in {event_method}: {str(exception)}")
+        self.log.error(f"Ignoring exception in {event_method}: {str(exception)}")
 
     def debug(self, message: discord.Message, response: str):
         if self.is_dev:

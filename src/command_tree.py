@@ -102,10 +102,15 @@ async def sql(interaction: discord.Interaction, sql_string: str):
         await interaction.response.send_message("Access denied", ephemeral=True)
         return
     
-    response = src.crud.raw_sql_execution(sql_string)
-    await interaction.response.send_message(
-        "Received the following db response:\n" + response
-    )
+    try:
+        response = src.crud.raw_sql_execution(sql_string, interaction.client.sql_engine)
+        await interaction.response.send_message(
+            "Received the following db response:\n" + response
+        )
+    except Exception as e:
+        await interaction.response.send_message(
+            "Query failed on db"
+        )
 
 @discord.app_commands.command(name="set_logging")
 async def set_logging(interaction: discord.Interaction, log_level: int):

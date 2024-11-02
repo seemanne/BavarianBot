@@ -97,6 +97,7 @@ class PollingStation:
         return True
 
     def count_ballots(self, is_snail, sql_engine):
+        LOG.debug("Counting ballots")
         snail_list = []
         if is_snail:
             res = "This xeet was snail!\n"
