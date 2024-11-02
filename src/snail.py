@@ -13,7 +13,7 @@ import src.orm
 LOG = logging.getLogger("uvicorn")
 
 def check_for_twitter_link(message: str):
-    matchli = re.match(r"https://[a-zA-Z]*\.com/.*/status/(\d*)", message)
+    matchli = re.search(r"https://[a-zA-Z]*\.com/.*/status/(\d*)", message)
     if not matchli:
         return False, None
     tweet_id = matchli.group(1)

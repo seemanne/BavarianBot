@@ -121,3 +121,11 @@ class ClientTest(unittest.TestCase):
     def test_empty_load(self):
 
         self.snail_state.load_from_db()
+    
+    def test_tweet_detection(self):
+
+        assert check_for_twitter_link("https://twitter.com/tekbog/status/1738295383749488720")[0]
+        assert check_for_twitter_link("this is a post: https://twitter.com/tekbog/status/1738295383749488720")[0]
+        assert check_for_twitter_link("https://fxtwitter.com/tekbog/status/1738295383749488720")[0]
+        assert check_for_twitter_link("https://x.com/tekbog/status/1738295383749488720")[0]
+        assert check_for_twitter_link("https://twitter.com/tekbog/status/1738295383749488720?t=bqEHRy2klOJBiQ-2XnnemA&s=19")[0]
