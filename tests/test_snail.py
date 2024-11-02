@@ -115,6 +115,8 @@ class ClientTest(unittest.TestCase):
 
         assert len(new_state.snail_cache) == 2
         assert list(new_state.snail_cache.cache.values())[0] == list(self.snail_state.snail_cache.cache.values())[0]
+
+        new_state.dump_to_db()
     
     def test_empty_load(self):
 
