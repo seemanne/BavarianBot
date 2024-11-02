@@ -64,12 +64,14 @@ class CachedXeet:
     def from_state_cache(cls, snail_cache: src.orm.SnailStateCache):
 
         ret = cls(
-            tweet_id=snail_cache.tweet_id[0],
-            initial_poster_name=snail_cache.initial_poster_name[0],
-            initial_jump_url=snail_cache.initial_jump_url[0],
+            tweet_id=snail_cache.tweet_id,
+            initial_poster_name=snail_cache.initial_poster_name,
+            initial_jump_url=snail_cache.initial_jump_url,
         )
-        ret.initial_post_time=snail_cache.initial_post_time[0],
-        ret.post_count=snail_cache.post_count[0]
+        print(snail_cache.initial_post_time)
+        print(type(snail_cache.initial_post_time))
+        ret.initial_post_time=snail_cache.initial_post_time,
+        ret.post_count=snail_cache.post_count
         return ret
 
 
