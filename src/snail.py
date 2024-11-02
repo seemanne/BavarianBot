@@ -3,11 +3,14 @@ import random
 import re
 import datetime
 from dataclasses import dataclass
+import logging
 import discord
 
 import src.datastructures
 import src.crud
 import src.orm
+
+LOG = logging.getLogger("uvicorn")
 
 def check_for_twitter_link(message: str):
     matchli = re.match(r"https://[a-zA-Z]*\.com/.*/status/(\d*)", message)
@@ -176,6 +179,7 @@ class SnailState:
         if not cached_item:
             cached_item = CachedXeet(tweet_id, message.author.name, message.jump_url)
             self.snail_cache.put(tweet_id, cached_item)
+            LOG.debug(f"Tweet detected new with id: {tweet_id}")
             if random.random() < 0.95:
                 return
             else:
@@ -183,6 +187,7 @@ class SnailState:
                 return
 
         cached_item.increment_count()
+        LOG.debug(f"Tweet detected snail with id: {tweet_id}")
         await self.setup_snailvotes(message, cached_item, True)
 
     async def setup_snailvotes(
