@@ -42,9 +42,12 @@ class Maggus(discord.Client):
 
         if in_test:
             db_url = "sqlite:///:memory:"
+            ro_url = "sqlite:///:memory:?mode=ro&uri=true"
         else:
             db_url = "sqlite:///db/chalkotheke.db"
+            ro_url = "sqlite:///file:db/chalkotheke.db?mode=ro&uri=true"
         self.sql_engine = sqlalchemy.create_engine(db_url)
+        self.sql_engine_ro = sqlalchemy.create_engine(ro_url)
 
         self.activated = True
         self.snail_lock = False

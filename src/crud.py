@@ -178,9 +178,11 @@ def raw_sql_execution(query: str, engine: sqlalchemy.Engine):
 
     with engine.connect() as conn:
 
-        res = conn.execute(text(query)).all()
+        query_res = conn.execute(text(query))
+        columns = list(query_res.keys())
+        res = query_res.all()
     
     msg = ""
     for row in res:
         msg += f"{str(row)}\n"
-    return msg
+    return msg, columns

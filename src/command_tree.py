@@ -99,18 +99,20 @@ async def reset_count(interaction: discord.Interaction):
 @discord.app_commands.command(name="sql")
 async def sql(interaction: discord.Interaction, sql_string: str):
     if interaction.user.name != "karlpopper":
-        await interaction.response.send_message("Access denied", ephemeral=True)
-        return
+        engine = interaction.client.sql_engine_ro
+    else:
+        engine = interaction.client.sql_engine
     
     try:
-        response = src.crud.raw_sql_execution(sql_string, interaction.client.sql_engine)
+        response, col_names = src.crud.raw_sql_execution(sql_string, engine)
         await interaction.response.send_message(
-            "Received the following db response:\n" + response
+            "Received the following db response:\n" + str(col_names) + "\n" + response
         )
     except Exception as e:
         await interaction.response.send_message(
             "Query failed on db"
         )
+        raise e
 
 @discord.app_commands.command(name="set_logging")
 async def set_logging(interaction: discord.Interaction, log_level: int):
