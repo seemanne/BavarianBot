@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import random
 import logging
 import re
@@ -31,17 +32,22 @@ class Maggus(discord.Client):
     ):
         if in_test:
             self.loop = test_loop
+            self.in_test = True
         else:
+            self.in_test = False
             super().__init__(intents=intents, **options)
             self.tree = app_commands.CommandTree(self)
         self.log = log
         self.is_dev = src.auth.DEV
 
         if in_test:
-            db_url = "sqlite:///test.db"
+            db_url = "sqlite:///:memory:"
+            ro_url = "sqlite:///:memory:?mode=ro&uri=true"
         else:
             db_url = "sqlite:///db/chalkotheke.db"
+            ro_url = "sqlite:///file:db/chalkotheke.db?mode=ro&uri=true"
         self.sql_engine = sqlalchemy.create_engine(db_url)
+        self.sql_engine_ro = sqlalchemy.create_engine(ro_url)
 
         self.activated = True
         self.snail_lock = False
@@ -49,9 +55,9 @@ class Maggus(discord.Client):
         self.message_hooks: dict[int, src.tagger.TagCreationFlow] = {}
 
         self.pond = src.fishing.pond.Pond()
-        self.snail_cache = src.datastructures.LRUCache(1000)
-        self.snail_votes = {}
+        self.snail_state = src.snail.SnailState(10000, self.sql_engine)
         self.countdown_cache = None
+        self.most_recent_message_id = None
 
     def __repr__(self) -> str:
         return "BavarianClient"
@@ -72,7 +78,7 @@ class Maggus(discord.Client):
 
         self.tree.copy_global_to(guild=discord.Object(id=guild_id))
         await self.tree.sync(guild=discord.Object(id=guild_id))
-        self.log.info("COMMAND TREE SYNCED SUCCESSFULLY")
+        self.log.info("Synced command tree")
 
         self.pond.populate_pond_and_start_ecosystem()
         self.log.info("Started pond ecosystem")
@@ -81,9 +87,23 @@ class Maggus(discord.Client):
             f"https://discord.com/api/webhooks/1189583746815508510/{src.auth.WEBHOOK}",
             client=self,
         )
-        # This copies the global commands over to your guild.
-        # self.tree.copy_global_to(guild=my_secrets.MY_GUILD)
-        # await self.tree.sync(guild=my_secrets.MY_GUILD)
+        # keep strong ref to heartbeat to avoid gc
+        self.hearbeat_task = self.loop.create_task(self.heartbeat_loop())
+
+    async def heartbeat_loop(self):
+        if self.in_test:
+            return
+        if self.is_dev:
+            heartbeat_interval = 5
+        else:
+            heartbeat_interval = 60
+        self.log.info("Starting heartbeat")
+        while True:
+            await asyncio.sleep(heartbeat_interval)
+            now_str = datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds")
+            self.log.info(
+                f"HEARTBEAT: {now_str} tweets: {len(self.snail_state.snail_cache)} fish: {len(self.pond.fishes)} most_recent_message: {self.most_recent_message_id} countdown_cache: {self.countdown_cache}"
+            )
 
     async def on_message(self, message: discord.Message):
         if message.author == self.user:
@@ -95,15 +115,34 @@ class Maggus(discord.Client):
         if not self.activated:
             return
 
+        self.most_recent_message_id = message.id
+
         # self.fix_tweet(message)
         self.process_message_hooks(message)
         self.cinephile(message)
-        self.tagger(message)
+        # self.tagger(message)
         self.countdown_check(message)
-        # await self.snailcheck(message)
+        await self.snail_state.check_snail(message)
+    
+    async def _run_event(
+        self,
+        coro,
+        event_name: str,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        try:
+            await coro(*args, **kwargs)
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            try:
+                await self.on_error(event_name, e, *args, **kwargs)
+            except asyncio.CancelledError:
+                pass
 
-    async def on_error(self, event_method: str, /, *args: Any, **kwargs: Any) -> None:
-        self.log.info("Ignoring exception in %s", event_method)
+    async def on_error(self, event_method: str, exception: Exception, /, *args: Any, **kwargs: Any) -> None:
+        self.log.error(f"Ignoring exception in {event_method}: {str(exception)}")
 
     def debug(self, message: discord.Message, response: str):
         if self.is_dev:
@@ -112,40 +151,6 @@ class Maggus(discord.Client):
             self.log.debug(message)
 
         return
-
-    async def snailcheck(self, message: discord.Message):
-        is_x_link, link_info = src.snail.snail_check(
-            message=message, cache=self.snail_cache
-        )
-        if not is_x_link:
-            return
-        if (
-            not link_info and random.random() < 0.8 and not self.is_dev
-        ) or self.snail_lock:
-            return
-
-        if link_info:
-            snail = True
-        else:
-            snail = False
-
-        self.snail_lock = True
-        self.snail_votes = {"yes": set(), "no": set()}
-        await message.reply(
-            "Ooooh looks like we're back with another episode of '/snail' or '/notsnail'. You all have 30 seconds to vote!"
-        )
-        await asyncio.sleep(30)
-
-        if snail:
-            await message.channel.send(
-                f"It was indeed snail, correct guesses: {self.snail_votes.get('yes')}"
-            )
-        else:
-            await message.channel.send(
-                f"Lol, I tricked you. This Xeet wasn't snail! Correct guesses: {self.snail_votes.get('no')}"
-            )
-
-        self.snail_lock = False
 
     def cinephile(self, message):
         src.cinephile.cinema_check(message, self.loop)
@@ -208,8 +213,12 @@ class Maggus(discord.Client):
 
     def deactivate(self):
         self.activated = False
+        self.snail_state.dump_to_db()
+        self.log.info(f"Dumped {len(self.snail_state.snail_cache)} cached snails to db")
 
     def activate(self):
+        self.snail_state.load_from_db()
+        self.log.info(f"Loaded {len(self.snail_state.snail_cache)} cached snails from db")
         self.activated = True
 
     def process_message_hooks(self, message: discord.Message):

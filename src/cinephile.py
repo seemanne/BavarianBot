@@ -1,8 +1,10 @@
 import re
+import logging
 import newspaper
 import discord
 import asyncio
 
+LOG = logging.getLogger("uvicorn")
 
 def parse_movie(message: discord.Message):
     content = message.content
@@ -41,6 +43,7 @@ def cinema_check(message: discord.Message, loop: asyncio.AbstractEventLoop):
     content = parse_movie(message)
     if not content[0]:
         return
+    LOG.debug(f"Found movie reference in message")
     url = create_letterboxd_string(content[0], content[1])
     wiarticle = newspaper.Article(
         url[0],
@@ -70,6 +73,7 @@ def cinema_check(message: discord.Message, loop: asyncio.AbstractEventLoop):
             description=wiarticle.text,
             color=discord.Color.blue(),
         )
+        LOG.debug(f"Found movie with year in letterboxd")
     else:
         embed = discord.Embed(
             title=content[0],
@@ -77,5 +81,6 @@ def cinema_check(message: discord.Message, loop: asyncio.AbstractEventLoop):
             description=woarticle.text,
             color=discord.Color.blue(),
         )
+        LOG.debug(f"Found movie without year in letterboxd")
     loop.create_task(message.channel.send(embed=embed))
     return

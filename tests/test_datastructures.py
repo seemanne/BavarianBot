@@ -25,3 +25,6 @@ class ClientTest(unittest.TestCase):
         cache.put("k_6", "v_6")
 
         assert cache.get("k_1") == "v_1"
+        assert not cache.get("k_2")
+
+        assert len(cache) == 5

@@ -62,6 +62,9 @@ async def no_snail(interaction: discord.Interaction):
 
 @discord.app_commands.command(name="set_config")
 async def set_config(interaction: discord.Interaction, key: str, value: str):
+    if interaction.user.name != "karlpopper":
+        await interaction.response.send_message("Access denied", ephemeral=True)
+        return
     value = str(value)
     key = str(key)
 
@@ -71,6 +74,9 @@ async def set_config(interaction: discord.Interaction, key: str, value: str):
 
 @discord.app_commands.command(name="get_config")
 async def get_config(interaction: discord.Interaction, key: str):
+    if interaction.user.name != "karlpopper":
+        await interaction.response.send_message("Access denied", ephemeral=True)
+        return
     key = str(key)
 
     value = src.crud.get_config(key, interaction.client.sql_engine)
@@ -78,6 +84,44 @@ async def get_config(interaction: discord.Interaction, key: str):
         f"Key {key} has value {value}", ephemeral=True
     )
 
+
+@discord.app_commands.command(name="reset_count")
+async def reset_count(interaction: discord.Interaction):
+    if interaction.user.name != "karlpopper":
+        await interaction.response.send_message("Access denied", ephemeral=True)
+        return
+
+    interaction.client.countdown_cache = None
+    await interaction.response.send_message(
+        f"Countdown cache has been reset", ephemeral=True
+    )
+
+@discord.app_commands.command(name="sql")
+async def sql(interaction: discord.Interaction, sql_string: str):
+    if interaction.user.name != "karlpopper":
+        engine = interaction.client.sql_engine_ro
+    else:
+        engine = interaction.client.sql_engine
+    
+    try:
+        response, col_names = src.crud.raw_sql_execution(sql_string, engine)
+        await interaction.response.send_message(
+            "Received the following db response:\n" + str(col_names) + "\n" + response
+        )
+    except Exception as e:
+        await interaction.response.send_message(
+            "Query failed on db"
+        )
+        raise e
+
+@discord.app_commands.command(name="set_logging")
+async def set_logging(interaction: discord.Interaction, log_level: int):
+    if interaction.user.name != "karlpopper":
+        await interaction.response.send_message("Access denied", ephemeral=True)
+        return
+
+    interaction.client.log.setLevel(log_level)
+    await interaction.response.send_message(f"Set log level to {log_level}", ephemeral=True)
 
 LIST_OF_COMMANDS = [
     start_fishing,
@@ -88,4 +132,7 @@ LIST_OF_COMMANDS = [
     get_config,
     get_rod,
     feedback,
+    reset_count,
+    sql,
+    set_logging,
 ]

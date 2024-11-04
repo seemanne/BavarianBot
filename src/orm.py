@@ -36,6 +36,29 @@ class SnailBet(Base):
     result = Column(Integer)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
 
+    def to_dict_for_insert(self):
+        return {
+            "user_id": self.user_id,
+            "result": self.result
+        }
+
+
+class SnailVote(Base):
+    __tablename__ = "snailvote"
+    id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
+    xeet_poster = Column(String)
+    is_snail = Column(Integer)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class SnailStateCache(Base):
+    __tablename__ = "snailstate"
+    id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
+    tweet_id = Column(String)
+    initial_poster_name = Column(String)
+    initial_jump_url = Column(String)
+    initial_post_time = Column(DateTime)
+    post_count = Column(Integer)
 
 class FishScore(Base):
     __tablename__ = "fishscore"
