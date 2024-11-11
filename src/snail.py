@@ -175,7 +175,8 @@ class PollingStation:
                 )
                 res += f"{voter} "
             res += "\n"
-        src.crud.bulk_insert_snail_votes(snail_list, sql_engine)
+        if snail_list:
+            src.crud.bulk_insert_snail_votes(snail_list, sql_engine)
         return res
 
 
