@@ -235,7 +235,10 @@ class SnailState:
             else:
                 await self.setup_snailvotes(message, cached_item, False)
                 return
-
+        
+        if message.reference:
+            await message.reply("This message is snail, but I will let it fly")
+            return
         cached_item.increment_count()
         LOG.debug(f"Tweet detected snail with id: {tweet_id}")
         await self.setup_snailvotes(message, cached_item, True)
