@@ -1,4 +1,5 @@
 import asyncio
+import io
 import random
 import re
 import datetime
@@ -9,6 +10,7 @@ import discord
 import src.datastructures
 import src.crud
 import src.orm
+import src.images.needle
 
 LOG = logging.getLogger("uvicorn")
 
@@ -77,16 +79,61 @@ class CachedXeet:
 
 
 class PollingStation:
-    def __init__(self) -> None:
+    def __init__(self, channel) -> None:
         self.yes_votes = set()
         self.no_votes = set()
         self.registered_voters = set()
+        self.channel: discord.TextChannel = channel
+        self.has_needle = False
+        self.needle_message = None
+        self.last_needle_update = None
+        self.last_needle_update_token = 0
+        self.task_collector = set() # holds strong references to tasks to avoid gc
+
+    def n_ballots_received(self):
+        return len(self.no_votes) + len(self.yes_votes)
+    
+    async def update_needle(self):
+        # we need to stay within the 1 edit per second limit, but votes come in concurrently
+        if self.n_ballots_received() < 3:
+            LOG.debug("Bounced update (not enough ballots)")
+            return
+        if not self.has_needle:
+            self.last_needle_update = datetime.datetime.now(datetime.UTC)
+            self.has_needle = True
+            LOG.debug("Spawned needle message")
+            self.needle_message = await self.channel.send("Woah, guess who just stopped striking")
+            await asyncio.sleep(5)
+
+        if self.last_needle_update > datetime.datetime.now(datetime.UTC) - datetime.timedelta(seconds=3):
+            LOG.debug("Bounced update (too soon)")
+            token = self.last_needle_update_token
+            await asyncio.sleep(3)
+            if token == self.last_needle_update_token:
+                LOG.debug("Update redrive triggered")
+                await self.update_needle()
+            return
+        
+        self.last_needle_update_token += 1
+        self.last_needle_update = datetime.datetime.now(datetime.UTC)
+        await self._update_needle()
+    
+    async def _update_needle(self):
+        LOG.debug("Triggered an update for needle")
+        net_score = len(self.yes_votes) - len(self.no_votes)
+        
+        
+        buffer = src.images.needle.get_needle_into_buffer(net_score)
+        file = discord.File(buffer, "snail_needle.png")
+        await self.needle_message.edit(attachments=[file])
+        buffer.close()
 
     def vote_yes(self, voter_name):
         if voter_name in self.registered_voters:
             return False
         self.yes_votes.add(voter_name)
         self.registered_voters.add(voter_name)
+        self.task_collector.add(asyncio.create_task(self.update_needle()))
         return True
 
     def vote_no(self, voter_name):
@@ -94,6 +141,7 @@ class PollingStation:
             return False
         self.no_votes.add(voter_name)
         self.registered_voters.add(voter_name)
+        self.task_collector.add(asyncio.create_task(self.update_needle()))
         return True
 
     def count_ballots(self, is_snail, sql_engine):
@@ -198,7 +246,9 @@ class SnailState:
             await message.reply("You got to be kidding me")
             return
         src.crud.save_snail_vote(message.author.name, is_snail, self.sql_engine)
-        self.active_snail_votes[cached_item.tweet_id] = PollingStation()
+        self.active_snail_votes[cached_item.tweet_id] = PollingStation(
+            channel=message.channel
+        )
         reply = await message.reply(
             "Looks like we're due for another snailidental election. You all have 60 seconds to vote!\n",
             view=SnailButtons(tweet_id=cached_item.tweet_id, timeout=60),
