@@ -258,6 +258,11 @@ class SnailState:
             view=SnailButtons(tweet_id=cached_item.tweet_id, timeout=60),
         )
         await asyncio.sleep(60)
+
+        if self.active_snail_votes.get(cached_item.tweet_id).n_ballots_received() >= 5:
+            await reply.reply("Looks like California is still counting ballots due to high turnout!")
+            await asyncio.sleep(30)
+
         reply_content = self.active_snail_votes.pop(cached_item.tweet_id).count_ballots(
             is_snail, self.sql_engine
         )
