@@ -5,7 +5,6 @@ import sqlalchemy
 
 from src.orm import init_db
 from src.snail import SnailState, check_for_twitter_link, PollingStation, CachedXeet
-from src.datastructures import LRUCache
 from .mocking import Message, Author, TaskConsumingLoop
 
 

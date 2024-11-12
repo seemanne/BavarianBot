@@ -1,6 +1,5 @@
 import asyncio
 import datetime
-import random
 import logging
 import re
 from typing import Any
@@ -123,7 +122,7 @@ class Maggus(discord.Client):
         # self.tagger(message)
         self.countdown_check(message)
         await self.snail_state.check_snail(message)
-    
+
     async def _run_event(
         self,
         coro,
@@ -141,7 +140,9 @@ class Maggus(discord.Client):
             except asyncio.CancelledError:
                 pass
 
-    async def on_error(self, event_method: str, exception: Exception, /, *args: Any, **kwargs: Any) -> None:
+    async def on_error(
+        self, event_method: str, exception: Exception, /, *args: Any, **kwargs: Any
+    ) -> None:
         self.log.error(f"Ignoring exception in {event_method}: {str(exception)}")
 
     def debug(self, message: discord.Message, response: str):
@@ -218,7 +219,9 @@ class Maggus(discord.Client):
 
     def activate(self):
         self.snail_state.load_from_db()
-        self.log.info(f"Loaded {len(self.snail_state.snail_cache)} cached snails from db")
+        self.log.info(
+            f"Loaded {len(self.snail_state.snail_cache)} cached snails from db"
+        )
         self.activated = True
 
     def process_message_hooks(self, message: discord.Message):

@@ -60,7 +60,7 @@ class BugModal(ui.Modal):
     async def on_error(
         self, interaction: discord.Interaction, error: Exception
     ) -> None:
-        await interaction.client.on_error(f"Exception in BugReportModal: ", error)
+        await interaction.client.on_error("Exception in BugReportModal: ", error)
 
 
 class ImprovementModal(ui.Modal):
@@ -111,7 +111,7 @@ class ImprovementModal(ui.Modal):
     async def on_error(
         self, interaction: discord.Interaction, error: Exception
     ) -> None:
-        await interaction.client.on_error(f"Exception in ImprovementModal: ", error)
+        await interaction.client.on_error("Exception in ImprovementModal: ", error)
 
 
 class FeatureRequestModal(ui.Modal):
@@ -150,7 +150,7 @@ class FeatureRequestModal(ui.Modal):
     async def on_error(
         self, interaction: discord.Interaction, error: Exception
     ) -> None:
-        await interaction.client.on_error(f"Exception in FeatureRequestModal: ", error)
+        await interaction.client.on_error("Exception in FeatureRequestModal: ", error)
 
 
 class SelectView(ui.View):

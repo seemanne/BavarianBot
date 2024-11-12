@@ -1,6 +1,6 @@
 import unittest
 
-from src.datastructures import LRUCache, RandomStack
+from src.datastructures import LRUCache
 
 
 class ClientTest(unittest.TestCase):

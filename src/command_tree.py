@@ -1,8 +1,4 @@
 import discord
-import asyncio
-import random
-import datetime
-import logging
 import discord.app_commands
 import src.crud
 
@@ -22,19 +18,19 @@ async def on_error(
 async def yes_snail(interaction: discord.Interaction):
     if not interaction.client.snail_lock:
         await interaction.response.send_message(
-            f"No snail contest is open currently", ephemeral=True
+            "No snail contest is open currently", ephemeral=True
         )
         return
 
     if interaction.user.mention in interaction.client.snail_votes.get("no"):
         await interaction.response.send_message(
-            f"Sorry but you already voted!", ephemeral=True
+            "Sorry but you already voted!", ephemeral=True
         )
         return
 
     interaction.client.snail_votes.get("yes").add(interaction.user.mention)
     await interaction.response.send_message(
-        f"Added you to the yes votes", ephemeral=True
+        "Added you to the yes votes", ephemeral=True
     )
     return
 
@@ -43,20 +39,18 @@ async def yes_snail(interaction: discord.Interaction):
 async def no_snail(interaction: discord.Interaction):
     if not interaction.client.snail_lock:
         await interaction.response.send_message(
-            f"No snail contest is open currently", ephemeral=True
+            "No snail contest is open currently", ephemeral=True
         )
         return
 
     if interaction.user.mention in interaction.client.snail_votes.get("yes"):
         await interaction.response.send_message(
-            f"Sorry but you already voted!", ephemeral=True
+            "Sorry but you already voted!", ephemeral=True
         )
         return
 
     interaction.client.snail_votes.get("no").add(interaction.user.mention)
-    await interaction.response.send_message(
-        f"Added you to the no votes", ephemeral=True
-    )
+    await interaction.response.send_message("Added you to the no votes", ephemeral=True)
     return
 
 
@@ -69,7 +63,7 @@ async def set_config(interaction: discord.Interaction, key: str, value: str):
     key = str(key)
 
     src.crud.set_config(key, value, interaction.client.sql_engine)
-    await interaction.response.send_message(f"Config set", ephemeral=True)
+    await interaction.response.send_message("Config set", ephemeral=True)
 
 
 @discord.app_commands.command(name="get_config")
@@ -93,8 +87,9 @@ async def reset_count(interaction: discord.Interaction):
 
     interaction.client.countdown_cache = None
     await interaction.response.send_message(
-        f"Countdown cache has been reset", ephemeral=True
+        "Countdown cache has been reset", ephemeral=True
     )
+
 
 @discord.app_commands.command(name="sql")
 async def sql(interaction: discord.Interaction, sql_string: str):
@@ -102,17 +97,16 @@ async def sql(interaction: discord.Interaction, sql_string: str):
         engine = interaction.client.sql_engine_ro
     else:
         engine = interaction.client.sql_engine
-    
+
     try:
         response, col_names = src.crud.raw_sql_execution(sql_string, engine)
         await interaction.response.send_message(
             "Received the following db response:\n" + str(col_names) + "\n" + response
         )
     except Exception as e:
-        await interaction.response.send_message(
-            "Query failed on db"
-        )
+        await interaction.response.send_message("Query failed on db")
         raise e
+
 
 @discord.app_commands.command(name="set_logging")
 async def set_logging(interaction: discord.Interaction, log_level: int):
@@ -121,7 +115,10 @@ async def set_logging(interaction: discord.Interaction, log_level: int):
         return
 
     interaction.client.log.setLevel(log_level)
-    await interaction.response.send_message(f"Set log level to {log_level}", ephemeral=True)
+    await interaction.response.send_message(
+        f"Set log level to {log_level}", ephemeral=True
+    )
+
 
 LIST_OF_COMMANDS = [
     start_fishing,

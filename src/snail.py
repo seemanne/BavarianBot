@@ -1,5 +1,4 @@
 import asyncio
-import io
 import random
 import re
 import datetime
@@ -13,6 +12,7 @@ import src.orm
 import src.images.needle
 
 LOG = logging.getLogger("uvicorn")
+
 
 def check_for_twitter_link(message: str):
     matchli = re.search(r"https://[a-zA-Z]*\.com/.*/status/(\d*)", message)
@@ -36,7 +36,6 @@ def snail_check(message: discord.Message, cache: src.datastructures.LRUCache):
 
 
 def user_mention_to_id(mention: str):
-
     return int(mention.strip("<@>"))
 
 
@@ -54,27 +53,25 @@ class CachedXeet:
     def describe(self):
         desc = f"This Xeet was first posted by {self.initial_poster_name}. Use this link to jump to their message and check the discussion: {self.initial_jump_url}\n"
         return desc
-    
-    def to_dict(self):
 
+    def to_dict(self):
         return {
             "tweet_id": self.tweet_id,
             "initial_poster_name": self.initial_poster_name,
             "initial_jump_url": self.initial_jump_url,
             "initial_post_time": self.initial_post_time,
-            "post_count": self.post_count
+            "post_count": self.post_count,
         }
-    
+
     @classmethod
     def from_state_cache(cls, snail_cache: src.orm.SnailStateCache):
-
         ret = cls(
             tweet_id=snail_cache.tweet_id,
             initial_poster_name=snail_cache.initial_poster_name,
             initial_jump_url=snail_cache.initial_jump_url,
         )
-        ret.initial_post_time=snail_cache.initial_post_time
-        ret.post_count=snail_cache.post_count
+        ret.initial_post_time = snail_cache.initial_post_time
+        ret.post_count = snail_cache.post_count
         return ret
 
 
@@ -88,11 +85,11 @@ class PollingStation:
         self.needle_message = None
         self.last_needle_update = None
         self.last_needle_update_token = 0
-        self.task_collector = set() # holds strong references to tasks to avoid gc
+        self.task_collector = set()  # holds strong references to tasks to avoid gc
 
     def n_ballots_received(self):
         return len(self.no_votes) + len(self.yes_votes)
-    
+
     async def update_needle(self):
         # we need to stay within the 1 edit per second limit, but votes come in concurrently
         if self.n_ballots_received() < 3:
@@ -102,10 +99,14 @@ class PollingStation:
             self.last_needle_update = datetime.datetime.now(datetime.UTC)
             self.has_needle = True
             LOG.debug("Spawned needle message")
-            self.needle_message = await self.channel.send("Woah, guess who just stopped striking")
+            self.needle_message = await self.channel.send(
+                "Woah, guess who just stopped striking"
+            )
             await asyncio.sleep(5)
 
-        if self.last_needle_update > datetime.datetime.now(datetime.UTC) - datetime.timedelta(seconds=3):
+        if self.last_needle_update > datetime.datetime.now(
+            datetime.UTC
+        ) - datetime.timedelta(seconds=3):
             LOG.debug("Bounced update (too soon)")
             token = self.last_needle_update_token
             await asyncio.sleep(3)
@@ -113,16 +114,15 @@ class PollingStation:
                 LOG.debug("Update redrive triggered")
                 await self.update_needle()
             return
-        
+
         self.last_needle_update_token += 1
         self.last_needle_update = datetime.datetime.now(datetime.UTC)
         await self._update_needle()
-    
+
     async def _update_needle(self):
         LOG.debug("Triggered an update for needle")
         net_score = len(self.yes_votes) - len(self.no_votes)
-        
-        
+
         buffer = src.images.needle.get_needle_into_buffer(net_score)
         file = discord.File(buffer, "snail_needle.png")
         await self.needle_message.edit(attachments=[file])
@@ -158,8 +158,8 @@ class PollingStation:
             for voter in self.yes_votes:
                 snail_list.append(
                     src.orm.SnailBet(
-                        user_id = user_mention_to_id(voter),
-                        result = int(is_snail),
+                        user_id=user_mention_to_id(voter),
+                        result=int(is_snail),
                     )
                 )
                 res += f"{voter} "
@@ -169,8 +169,8 @@ class PollingStation:
             for voter in self.no_votes:
                 snail_list.append(
                     src.orm.SnailBet(
-                        user_id = user_mention_to_id(voter),
-                        result = int(not is_snail),
+                        user_id=user_mention_to_id(voter),
+                        result=int(not is_snail),
                     )
                 )
                 res += f"{voter} "
@@ -181,11 +181,7 @@ class PollingStation:
 
 
 class SnailState:
-    def __init__(
-        self,
-        cache_size,
-        sql_engine
-    ) -> None:
+    def __init__(self, cache_size, sql_engine) -> None:
         self.snail_cache = src.datastructures.LRUCache(cache_size)
         self.active_snail_votes: dict[str, PollingStation] = {}
         self.sql_engine = sql_engine
@@ -200,25 +196,20 @@ class SnailState:
             is_valid = polling_station.vote_no(voter_name)
 
         if is_valid:
-            return f"Your ballot has been cast successfully"
+            return "Your ballot has been cast successfully"
         else:
-            return f"Sorry, your vote has been rejected for suspected ballot stuffing"
-    
+            return "Sorry, your vote has been rejected for suspected ballot stuffing"
 
     def dump_to_db(self):
-        caches = [
-            xeet.to_dict() for xeet in self.snail_cache.cache.values()
-        ]
+        caches = [xeet.to_dict() for xeet in self.snail_cache.cache.values()]
         if caches:
             src.crud.dump_snail_cache(caches, self.sql_engine)
-    
 
     def load_from_db(self):
         rows = src.crud.load_snail_cache(self.snail_cache.capacity, self.sql_engine)
         for row in reversed(rows):
             cached_xeet = CachedXeet.from_state_cache(row)
             self.snail_cache.put(cached_xeet.tweet_id, cached_xeet)
-
 
     async def check_snail(self, message: discord.Message):
         has_link, tweet_id = check_for_twitter_link(message.content)
@@ -235,7 +226,7 @@ class SnailState:
             else:
                 await self.setup_snailvotes(message, cached_item, False)
                 return
-        
+
         if message.reference:
             await message.reply("This message is snail, but I will let it fly")
             return
@@ -260,7 +251,9 @@ class SnailState:
         await asyncio.sleep(60)
 
         if self.active_snail_votes.get(cached_item.tweet_id).n_ballots_received() >= 5:
-            await reply.reply("Looks like California is still counting ballots due to high turnout!")
+            await reply.reply(
+                "Looks like California is still counting ballots due to high turnout!"
+            )
             await asyncio.sleep(30)
 
         reply_content = self.active_snail_votes.pop(cached_item.tweet_id).count_ballots(
@@ -280,7 +273,9 @@ class SnailButtons(discord.ui.View):
         self.tweet_id = tweet_id
 
     @discord.ui.button(label="Snail!", style=discord.ButtonStyle.red)
-    async def snail_button(self, interaction_ctx: discord.Interaction, button_ctx: discord.Button):
+    async def snail_button(
+        self, interaction_ctx: discord.Interaction, button_ctx: discord.Button
+    ):
         reply = interaction_ctx.client.snail_state.vote(
             self.tweet_id, interaction_ctx.user.mention, True
         )
@@ -288,7 +283,9 @@ class SnailButtons(discord.ui.View):
         return
 
     @discord.ui.button(label="Not Snail!", style=discord.ButtonStyle.green)
-    async def nosnail_button(self, interaction_ctx: discord.Interaction, button_ctx: discord.Button):
+    async def nosnail_button(
+        self, interaction_ctx: discord.Interaction, button_ctx: discord.Button
+    ):
         reply = interaction_ctx.client.snail_state.vote(
             self.tweet_id, interaction_ctx.user.mention, False
         )

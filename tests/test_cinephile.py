@@ -1,5 +1,4 @@
 import unittest
-import newspaper
 from unittest.mock import patch
 import logging
 
@@ -8,7 +7,7 @@ import discord
 from src.client import Maggus
 
 from src.cinephile import parse_movie, create_letterboxd_string, cinema_check
-from .mocking import Message, TaskConsumingLoop, Channel
+from .mocking import Message, TaskConsumingLoop
 
 
 class FakeArticle:

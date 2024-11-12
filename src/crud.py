@@ -62,7 +62,7 @@ def get_tag(content: str, engine: sqlalchemy.Engine):
             if res:
                 return res[0]
             return f"Failed to find tag with name: {matchli.group(1)}, id: {matchli.group(2)}"
-    return f"Sorry, I couldn't parse this query. If this is a bug use /feedback"
+    return "Sorry, I couldn't parse this query. If this is a bug use /feedback"
 
 
 def get_config(key: str, engine: sqlalchemy.Engine):
@@ -126,44 +126,31 @@ def get_all_catches_by_username(user_name: str, engine: sqlalchemy.Engine):
 
 
 def bulk_insert_snail_votes(snail_list: list[SnailBet], engine: sqlalchemy.Engine):
-
     with engine.connect() as conn:
-        query = (
-            insert(SnailBet).values(
-                [bet.to_dict_for_insert() for bet in snail_list]
-            )
+        query = insert(SnailBet).values(
+            [bet.to_dict_for_insert() for bet in snail_list]
         )
         conn.execute(query)
         conn.commit()
 
 
 def save_snail_vote(xeet_poster: str, is_snail: bool, engine: sqlalchemy.Engine):
-
     with engine.connect() as conn:
-        query = (
-            insert(SnailVote).values(
-                xeet_poster=xeet_poster,
-                is_snail=int(is_snail)
-            )
+        query = insert(SnailVote).values(
+            xeet_poster=xeet_poster, is_snail=int(is_snail)
         )
         conn.execute(query)
         conn.commit()
 
 
 def dump_snail_cache(caches: list[dict], engine: sqlalchemy.Engine):
-
     with engine.connect() as conn:
-        query = (
-            insert(SnailStateCache).values(
-                caches
-            )
-        )
+        query = insert(SnailStateCache).values(caches)
         conn.execute(query)
         conn.commit()
 
 
 def load_snail_cache(limit: int, engine: sqlalchemy.Engine):
-
     with engine.connect() as conn:
         query = (
             select(SnailStateCache)
@@ -175,13 +162,11 @@ def load_snail_cache(limit: int, engine: sqlalchemy.Engine):
 
 
 def raw_sql_execution(query: str, engine: sqlalchemy.Engine):
-
     with engine.connect() as conn:
-
         query_res = conn.execute(text(query))
         columns = list(query_res.keys())
         res = query_res.all()
-    
+
     msg = ""
     for row in res:
         msg += f"{str(row)}\n"
