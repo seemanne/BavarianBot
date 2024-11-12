@@ -80,12 +80,18 @@ class PollingStation:
         self.yes_votes = set()
         self.no_votes = set()
         self.registered_voters = set()
+        self.open = True
         self.channel: discord.TextChannel = channel
         self.has_needle = False
         self.needle_message = None
         self.last_needle_update = None
         self.last_needle_update_token = 0
         self.task_collector = set()  # holds strong references to tasks to avoid gc
+    
+    async def close(self):
+        self.open = False
+        if self.has_needle:
+            await asyncio.sleep(3)
 
     def n_ballots_received(self):
         return len(self.no_votes) + len(self.yes_votes)
@@ -190,6 +196,8 @@ class SnailState:
         polling_station = self.active_snail_votes.get(tweet_id, None)
         if not polling_station:
             return f"Sorry {voter_name}, this vote has already closed"
+        if not polling_station.open:
+            return f"Sorry {voter_name}, looks like you didn't reach the polling station in time"
         if vote_snail:
             is_valid = polling_station.vote_yes(voter_name)
         else:
@@ -250,11 +258,16 @@ class SnailState:
         )
         await asyncio.sleep(60)
 
+        if self.active_snail_votes.get(cached_item.tweet_id).n_ballots_received() >= 3:
+            await asyncio.sleep(30)
+
         if self.active_snail_votes.get(cached_item.tweet_id).n_ballots_received() >= 5:
             await reply.reply(
                 "Looks like California is still counting ballots due to high turnout!"
             )
             await asyncio.sleep(30)
+        
+        await self.active_snail_votes.get(cached_item.tweet_id).close()
 
         reply_content = self.active_snail_votes.pop(cached_item.tweet_id).count_ballots(
             is_snail, self.sql_engine
@@ -279,7 +292,7 @@ class SnailButtons(discord.ui.View):
         reply = interaction_ctx.client.snail_state.vote(
             self.tweet_id, interaction_ctx.user.mention, True
         )
-        await interaction_ctx.response.send_message(reply, ephemeral=True)
+        await interaction_ctx.response.send_message(reply, ephemeral=True, delete_after=7)
         return
 
     @discord.ui.button(label="Not Snail!", style=discord.ButtonStyle.green)
@@ -289,5 +302,5 @@ class SnailButtons(discord.ui.View):
         reply = interaction_ctx.client.snail_state.vote(
             self.tweet_id, interaction_ctx.user.mention, False
         )
-        await interaction_ctx.response.send_message(reply, ephemeral=True)
+        await interaction_ctx.response.send_message(reply, ephemeral=True, delete_after=7)
         return
