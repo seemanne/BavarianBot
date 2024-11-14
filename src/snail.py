@@ -81,18 +81,21 @@ class CachedXeet:
 
 
 class PollingStation:
-    def __init__(self, channel) -> None:
+    def __init__(self) -> None:
         self.yes_votes = set()
         self.no_votes = set()
         self.registered_voters = set()
         self.open = True
-        self.channel: discord.TextChannel = channel
+        self.needle_message: discord.Message = None
         self.has_needle = False
-        self.needle_message = None
-        self.last_needle_update = None
+        self.never_needle = False
+        self.last_needle_update = datetime.datetime.now(datetime.UTC)
         self.last_needle_update_token = 0
         self.task_collector = set()  # holds strong references to tasks to avoid gc
-    
+
+    def handover_reply(self, reply):
+        self.needle_message = reply
+
     async def close(self):
         self.open = False
         if self.has_needle:
@@ -103,24 +106,27 @@ class PollingStation:
 
     async def update_needle(self):
         # we need to stay within the 1 edit per second limit, but votes come in concurrently
-        if self.n_ballots_received() < 3:
-            LOG.debug("Bounced update (not enough ballots)")
+        if self.never_needle:
             return
+        if not self.has_needle and random.random() > 0.5:
+            self.never_needle = True
+            return
+
         if not self.has_needle:
-            self.last_needle_update = datetime.datetime.now(datetime.UTC)
             self.has_needle = True
-            LOG.debug("Spawned needle message")
-            self.needle_message = await self.channel.send(
-                "Woah, guess who just stopped striking"
-            )
-            await asyncio.sleep(5)
+            LOG.debug("Starting needling")
+
+        if not self.needle_message:
+            # rare case where we have not been handed the reply yet
+            await asyncio.sleep(0.5)
+            await self.update_needle()
 
         if self.last_needle_update > datetime.datetime.now(
             datetime.UTC
-        ) - datetime.timedelta(seconds=3):
+        ) - datetime.timedelta(seconds=2):
             LOG.debug("Bounced update (too soon)")
             token = self.last_needle_update_token
-            await asyncio.sleep(3)
+            await asyncio.sleep(2)
             if token == self.last_needle_update_token:
                 LOG.debug("Update redrive triggered")
                 await self.update_needle()
@@ -276,24 +282,23 @@ class SnailState:
             await message.reply("You got to be kidding me")
             return
         src.crud.save_snail_vote(message.author.name, is_snail, self.sql_engine)
-        self.active_snail_votes[cached_item.tweet_id] = PollingStation(
-            channel=message.channel
-        )
+        self.active_snail_votes[cached_item.tweet_id] = PollingStation()
         reply = await message.reply(
             "Looks like we're due for another snailidental election. You all have 60 seconds to vote!\n",
             view=SnailButtons(tweet_id=cached_item.tweet_id, timeout=60),
         )
+        self.active_snail_votes[cached_item.tweet_id].handover_reply(reply)
         await asyncio.sleep(60)
 
         if self.active_snail_votes.get(cached_item.tweet_id).n_ballots_received() >= 3:
             await asyncio.sleep(30)
 
         if self.active_snail_votes.get(cached_item.tweet_id).n_ballots_received() >= 5:
-            await reply.reply(
-                "Looks like California is still counting ballots due to high turnout!"
+            await reply.edit(
+                content="Looks like California is still counting ballots due to high turnout!"
             )
             await asyncio.sleep(30)
-        
+
         await self.active_snail_votes.get(cached_item.tweet_id).close()
 
         reply_content = self.active_snail_votes.pop(cached_item.tweet_id).count_ballots(
