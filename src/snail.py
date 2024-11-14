@@ -324,7 +324,9 @@ class SnailButtons(discord.ui.View):
         reply = interaction_ctx.client.snail_state.vote(
             self.tweet_id, interaction_ctx.user.mention, True
         )
-        await interaction_ctx.response.send_message(reply, ephemeral=True, delete_after=7)
+        await interaction_ctx.response.send_message(
+            reply, ephemeral=True, delete_after=7
+        )
         return
 
     @discord.ui.button(label="Not Snail!", style=discord.ButtonStyle.green)
@@ -334,5 +336,7 @@ class SnailButtons(discord.ui.View):
         reply = interaction_ctx.client.snail_state.vote(
             self.tweet_id, interaction_ctx.user.mention, False
         )
-        await interaction_ctx.response.send_message(reply, ephemeral=True, delete_after=7)
+        await interaction_ctx.response.send_message(
+            reply, ephemeral=True, delete_after=7
+        )
         return
