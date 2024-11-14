@@ -22,17 +22,22 @@ def check_for_twitter_link(message: str):
     return True, tweet_id
 
 
-def snail_check(message: discord.Message, cache: src.datastructures.LRUCache):
-    has_link, tweet_id = check_for_twitter_link(message.content)
-    if not has_link:
+def check_for_bluesky_link(message: str):
+    matchli = re.search(r"bsky\.app/profile/(.*)/post/([^?]*)", message)
+    if not matchli:
         return False, None
+    bsky_id = f"{matchli.group(1)}-{matchli.group(2)}"
+    return True, bsky_id
 
-    cached_item = cache.get(tweet_id)
-    if not cached_item:
-        cache.put(tweet_id, (message.author.name, datetime.datetime.utcnow()))
-        return True, None
 
-    return True, cached_item
+def check_for_youtube_link(message: str):
+    matchli = re.search(r"youtube\.com/watch\?v=([^&]*)", message)
+    if not matchli:
+        matchli = re.search(r"youtu\.be/([^\?]*)", message)
+        if not matchli:
+            return False, None
+    youtube_id = f"youtube-{matchli.group(1)}"
+    return True, youtube_id
 
 
 def user_mention_to_id(mention: str):
@@ -154,9 +159,9 @@ class PollingStation:
         LOG.debug("Counting ballots")
         snail_list = []
         if is_snail:
-            res = "This xeet was snail!\n"
+            res = "This post was snail!\n"
         else:
-            res = "This tweet was not snail!\n"
+            res = "This post was not snail!\n"
         if self.registered_voters:
             res += "Exit poll:\n"
         if self.yes_votes:
@@ -186,10 +191,30 @@ class PollingStation:
         return res
 
 
+class LinkChecker:
+    def __init__(self) -> None:
+        self.rules_to_check = [
+            check_for_twitter_link,
+            check_for_bluesky_link,
+            check_for_youtube_link,
+        ]
+
+    def check_message(self, message: str):
+        if "https://" not in message:
+            return False, None
+
+        for rule in self.rules_to_check:
+            matched, res = rule(message)
+            if matched:
+                return matched, res
+        return False, None
+
+
 class SnailState:
     def __init__(self, cache_size, sql_engine) -> None:
         self.snail_cache = src.datastructures.LRUCache(cache_size)
         self.active_snail_votes: dict[str, PollingStation] = {}
+        self.link_checker = LinkChecker()
         self.sql_engine = sql_engine
 
     def vote(self, tweet_id, voter_name, vote_snail):
@@ -220,15 +245,17 @@ class SnailState:
             self.snail_cache.put(cached_xeet.tweet_id, cached_xeet)
 
     async def check_snail(self, message: discord.Message):
-        has_link, tweet_id = check_for_twitter_link(message.content)
-        if not has_link:
+        if "https://" not in message.content:
+            return
+        has_post, post_id = self.link_checker.check_message(message)
+        if not has_post:
             return
 
-        cached_item = self.snail_cache.get(tweet_id)
+        cached_item = self.snail_cache.get(post_id)
         if not cached_item:
-            cached_item = CachedXeet(tweet_id, message.author.name, message.jump_url)
-            self.snail_cache.put(tweet_id, cached_item)
-            LOG.debug(f"Tweet detected new with id: {tweet_id}")
+            cached_item = CachedXeet(post_id, message.author.name, message.jump_url)
+            self.snail_cache.put(post_id, cached_item)
+            LOG.debug(f"Post detected new with id: {post_id}")
             if random.random() < 0.95:
                 return
             else:
@@ -239,7 +266,7 @@ class SnailState:
             await message.reply("This message is snail, but I will let it fly")
             return
         cached_item.increment_count()
-        LOG.debug(f"Tweet detected snail with id: {tweet_id}")
+        LOG.debug(f"Post detected snail with id: {post_id}")
         await self.setup_snailvotes(message, cached_item, True)
 
     async def setup_snailvotes(
