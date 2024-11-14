@@ -88,6 +88,8 @@ class Maggus(discord.Client):
         )
         # keep strong ref to heartbeat to avoid gc
         self.hearbeat_task = self.loop.create_task(self.heartbeat_loop())
+        game = discord.Game("Hunting Snails | /feedback")
+        await self.change_presence(status=discord.Status.online, activity=game)
 
     async def heartbeat_loop(self):
         if self.in_test:
