@@ -67,6 +67,7 @@ class Maggus(discord.Client):
     async def setup_hook(self):
         if self.is_dev:
             guild_id = 143381234494603264
+            self.log.setLevel(logging.DEBUG)
         else:
             guild_id = 389103804835954699
 
