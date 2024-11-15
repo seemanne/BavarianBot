@@ -4,7 +4,7 @@ from unittest.mock import patch
 import sqlalchemy
 
 from src.orm import init_db
-from src.snail import SnailState, check_for_twitter_link, PollingStation, CachedXeet
+from src.snail import SnailState, LinkChecker, PollingStation, CachedXeet
 from .mocking import Message, Author, TaskConsumingLoop
 
 
@@ -19,7 +19,7 @@ async def fake_sleep(time):
     return
 
 
-class ClientTest(unittest.TestCase):
+class SnailTest(unittest.TestCase):
     def setUp(self) -> None:
         self.sql_engine = sqlalchemy.create_engine("sqlite:///:memory:")
         init_db(self.sql_engine)
@@ -33,7 +33,7 @@ class ClientTest(unittest.TestCase):
     @patch("asyncio.sleep", new=fake_sleep)
     def test_snail_negative(self):
         message = Message(
-            content="https://www.youtube.com/watch?v=dQw4w9WgXcQ&pp=ygUXbmV2ZXIgZ29ubmEgZ2l2ZSB5b3UgdXA%3D",
+            content="https://news.ycombinator.com/item?id=42134964",
             author=Author(),
             jump_url="message_jump_url",
             reference=None
@@ -57,6 +57,7 @@ class ClientTest(unittest.TestCase):
 
     @patch("random.random", new=fake_random(0.1))
     @patch("asyncio.sleep", new=fake_sleep)
+    @patch("src.snail.PollingStation.update_needle", new=fake_sleep)
     def test_snail_is_snail(self):
         message = Message(
             content="https://twitter.com/tekbog/status/1738295383749488720",
@@ -73,7 +74,7 @@ class ClientTest(unittest.TestCase):
     @patch("asyncio.create_task", new=fake_sleep)
     def test_ballot_stuffing(self):
         
-        polling_station = PollingStation(channel=None)
+        polling_station = PollingStation()
         voter = "<@123456789>"
         polling_station.vote_yes(voter)
         assert not polling_station.vote_no(voter)
@@ -81,7 +82,7 @@ class ClientTest(unittest.TestCase):
     @patch("asyncio.create_task", new=fake_sleep)
     def test_ballot_counting(self):
         
-        polling_station = PollingStation(channel=None)
+        polling_station = PollingStation()
         voter_1 = "<@1234567891>"
         voter_2 = "<@1234567892>"
         voter_3 = "<@1234567893>"
@@ -126,10 +127,24 @@ class ClientTest(unittest.TestCase):
 
         self.snail_state.load_from_db()
     
-    def test_tweet_detection(self):
+class LinkCheckerTest(unittest.TestCase):
 
-        assert check_for_twitter_link("https://twitter.com/tekbog/status/1738295383749488720")[0]
-        assert check_for_twitter_link("this is a post: https://twitter.com/tekbog/status/1738295383749488720")[0]
-        assert check_for_twitter_link("https://fxtwitter.com/tekbog/status/1738295383749488720")[0]
-        assert check_for_twitter_link("https://x.com/tekbog/status/1738295383749488720")[0]
-        assert check_for_twitter_link("https://twitter.com/tekbog/status/1738295383749488720?t=bqEHRy2klOJBiQ-2XnnemA&s=19")[0]
+    def setUp(self):
+        
+        self.checker = LinkChecker()
+    
+    def test_twitter_links(self):
+
+        assert self.checker.check_message("https://twitter.com/tekbog/status/1738295383749488720")[0]
+        assert self.checker.check_message("this is a post: https://twitter.com/tekbog/status/1738295383749488720")[0]
+        assert self.checker.check_message("https://fxtwitter.com/tekbog/status/1738295383749488720")[0]
+        assert self.checker.check_message("https://x.com/tekbog/status/1738295383749488720")[0]
+        assert self.checker.check_message("https://twitter.com/tekbog/status/1738295383749488720?t=bqEHRy2klOJBiQ-2XnnemA&s=19")[0]
+
+    def test_youtube_links(self):
+
+        tup_1 = self.checker.check_message("https://www.youtube.com/watch?v=Tec_5jQRNdY")
+        tup_2 = self.checker.check_message("https://youtu.be/Tec_5jQRNdY?si=ITUr1dk39PwX7Yvb&t=1")
+        assert tup_1[0]
+        assert tup_2[0]
+        assert tup_1[1] == tup_2[1]

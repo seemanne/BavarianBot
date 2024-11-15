@@ -106,7 +106,7 @@ class PollingStation:
     def n_ballots_received(self):
         return len(self.no_votes) + len(self.yes_votes)
 
-    async def update_needle(self):
+    async def update_needle(self): # pragma: no cover
         # we need to stay within the 1 edit per second limit, but votes come in concurrently
         if self.never_needle:
             return

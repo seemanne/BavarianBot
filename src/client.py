@@ -64,7 +64,7 @@ class Maggus(discord.Client):
     def __str__(self) -> str:
         return "BavarianClient"
 
-    async def setup_hook(self):
+    async def setup_hook(self): # pragma: no cover
         if self.is_dev:
             guild_id = 143381234494603264
             self.log.setLevel(logging.DEBUG)
