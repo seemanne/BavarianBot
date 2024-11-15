@@ -83,8 +83,8 @@ class CachedXeet:
 
 class PollingStation:
     def __init__(self) -> None:
-        self.yes_votes = set()
-        self.no_votes = set()
+        self.yes_votes = list()
+        self.no_votes = list()
         self.registered_voters = set()
         self.open = True
         self.needle_message: discord.Message = None
@@ -94,8 +94,9 @@ class PollingStation:
         self.last_needle_update_token = 0
         self.task_collector = set()  # holds strong references to tasks to avoid gc
 
-    def handover_reply(self, reply):
+    async def handover_reply(self, reply):
         self.needle_message = reply
+        await self.update_needle()
 
     async def close(self):
         self.open = False
@@ -120,6 +121,7 @@ class PollingStation:
 
         if not self.needle_message:
             # rare case where we have not been handed the reply yet
+            LOG.warning("Needle update called but needle was not passed yet")
             await asyncio.sleep(0.5)
             await self.update_needle()
 
@@ -148,17 +150,17 @@ class PollingStation:
         buffer.close()
 
     def vote_yes(self, voter_name):
-        if voter_name in self.registered_voters:
+        if voter_name in self.registered_voters and not src.auth.DEV:
             return False
-        self.yes_votes.add(voter_name)
+        self.yes_votes.append(voter_name)
         self.registered_voters.add(voter_name)
         self.task_collector.add(asyncio.create_task(self.update_needle()))
         return True
 
     def vote_no(self, voter_name):
-        if voter_name in self.registered_voters:
+        if voter_name in self.registered_voters and not src.auth.DEV:
             return False
-        self.no_votes.add(voter_name)
+        self.no_votes.append(voter_name)
         self.registered_voters.add(voter_name)
         self.task_collector.add(asyncio.create_task(self.update_needle()))
         return True
@@ -166,10 +168,10 @@ class PollingStation:
     def count_ballots(self, is_snail, sql_engine):
         LOG.debug("Counting ballots")
         snail_list = []
-        if is_snail:
-            res = "This post was snail!\n"
-        else:
+        if not is_snail:
             res = "This post was not snail!\n"
+        else:
+            res = "\n"
         if self.registered_voters:
             res += "Exit poll:\n"
         if self.yes_votes:
@@ -255,7 +257,7 @@ class SnailState:
     async def check_snail(self, message: discord.Message):
         if "https://" not in message.content:
             return
-        has_post, post_id = self.link_checker.check_message(message)
+        has_post, post_id = self.link_checker.check_message(message.content)
         if not has_post:
             return
 
@@ -271,6 +273,7 @@ class SnailState:
                 return
 
         if message.reference:
+            LOG.debug("Bailing on snailvote due to reply")
             await message.reply("This message is snail, but I will let it fly")
             return
         cached_item.increment_count()
@@ -289,29 +292,25 @@ class SnailState:
             "Looks like we're due for another snailidental election. You all have 60 seconds to vote!\n",
             view=SnailButtons(tweet_id=cached_item.tweet_id, timeout=60),
         )
-        self.active_snail_votes[cached_item.tweet_id].handover_reply(reply)
+        await self.active_snail_votes[cached_item.tweet_id].handover_reply(reply)
+        LOG.debug("Completed reply handover to PollingStation")
         await asyncio.sleep(60)
 
         if self.active_snail_votes.get(cached_item.tweet_id).n_ballots_received() >= 3:
             await asyncio.sleep(30)
 
-        if self.active_snail_votes.get(cached_item.tweet_id).n_ballots_received() >= 5:
-            await reply.edit(
-                content="Looks like California is still counting ballots due to high turnout!"
-            )
-            await asyncio.sleep(30)
-
+        LOG.debug("Closing snailvote")
         await self.active_snail_votes.get(cached_item.tweet_id).close()
 
         reply_content = self.active_snail_votes.pop(cached_item.tweet_id).count_ballots(
             is_snail, self.sql_engine
         )
         edit_content = cached_item.describe()
+        LOG.debug("Posting snailresults")
         if is_snail:
-            await reply.edit(content=edit_content, view=None)
+            await reply.edit(content=edit_content + reply_content, view=None)
         else:
-            await reply.delete()
-        await message.channel.send(reply_content)
+            await reply.edit(content=reply_content, view=None)
 
 
 class SnailButtons(discord.ui.View):
