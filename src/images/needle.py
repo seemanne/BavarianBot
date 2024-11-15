@@ -26,7 +26,7 @@ def get_text(abs_score):
         return "Lean "
     if abs_score <= 5:
         return "Likely "
-    return "Very Likely"
+    return "Very Likely "
 
 def get_needle_into_buffer(net_score):
     buffer = io.BytesIO()
@@ -35,11 +35,22 @@ def get_needle_into_buffer(net_score):
     im = Image.alpha_composite(
         CACHED_BACKGROUND,
         CACHED_NEEDLE.rotate(
-            180 * math.atan(net_score) / math.pi,
+            scaling_factor * 180 * math.atan(net_score) / math.pi,
             center=(1500 // RESIZE_FACTOR, 1465 // RESIZE_FACTOR),
         ),
     )
-    
+    d = ImageDraw.Draw(im)
+    d.text((1500 // RESIZE_FACTOR,5), "Chance of Snail:", anchor="ma", fill=(120,120,120,255),font_size=180 // RESIZE_FACTOR)
+    if net_score < 0:
+        color = (231,32,28,255)
+        text = get_text(abs(net_score)) + "not Snail"
+    else: 
+        color = (28,130,230,255)
+        text = get_text(abs(net_score)) + "Snail"
+    if abs_score <= 1:
+        d.text((1500 // RESIZE_FACTOR,1480 // RESIZE_FACTOR), "Tossup", anchor="ma", fill=(90,90,90,255),font_size=180 // RESIZE_FACTOR)
+    else:
+        d.text((1500 // RESIZE_FACTOR, 1480 // RESIZE_FACTOR), text, anchor="ma", fill=color,font_size=180 // RESIZE_FACTOR)
     im.save(buffer, "png")
     buffer.seek(0)
     LOG.debug(f"Saved image to buffer, size: {im.size}")
