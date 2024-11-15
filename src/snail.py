@@ -9,6 +9,7 @@ import discord
 import src.datastructures
 import src.crud
 import src.orm
+import src.auth
 import src.images.needle
 
 LOG = logging.getLogger("uvicorn")
@@ -108,7 +109,8 @@ class PollingStation:
         # we need to stay within the 1 edit per second limit, but votes come in concurrently
         if self.never_needle:
             return
-        if not self.has_needle and random.random() > 0.5:
+        if not self.has_needle and random.random() > 0.5 and not src.auth.DEV:
+            LOG.debug("Lost needle roll")
             self.never_needle = True
             return
 
