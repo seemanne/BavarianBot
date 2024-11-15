@@ -57,7 +57,7 @@ class CachedXeet:
         self.post_count += 1
 
     def describe(self):
-        desc = f"This Xeet was first posted by {self.initial_poster_name}. Use this link to jump to their message and check the discussion: {self.initial_jump_url}\n"
+        desc = f"This piece of content was first posted by {self.initial_poster_name}. Use this link to jump to their message and check the discussion: {self.initial_jump_url}"
         return desc
 
     def to_dict(self):
