@@ -88,8 +88,6 @@ class Maggus(discord.Client):
         )
         # keep strong ref to heartbeat to avoid gc
         self.hearbeat_task = self.loop.create_task(self.heartbeat_loop())
-        game = discord.Game("Hunting Snails | /feedback")
-        await self.change_presence(status=discord.Status.online, activity=game)
 
     async def heartbeat_loop(self):
         if self.in_test:
@@ -214,13 +212,15 @@ class Maggus(discord.Client):
 
         self.message_hooks[message.id] = src.tagger.TagAlterationFlow(message=message)
 
-    def deactivate(self):
+    async def deactivate(self):
         self.activated = False
         self.snail_state.dump_to_db()
         self.log.info(f"Dumped {len(self.snail_state.snail_cache)} cached snails to db")
 
-    def activate(self):
+    async def activate(self):
         self.snail_state.load_from_db()
+        game = discord.Game("Snails | /feedback")
+        await self.change_presence(status=discord.Status.online, activity=game)
         self.log.info(
             f"Loaded {len(self.snail_state.snail_cache)} cached snails from db"
         )

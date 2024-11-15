@@ -64,13 +64,13 @@ async def stop_client():
 
 @app.put("/client/deactivate")
 async def deactivate_client():
-    client.deactivate()
+    await client.deactivate()
     return {"message": "Client deactivated, no longer receiving messages"}
 
 
 @app.put("/client/activate")
 async def activate_client():
-    client.activate()
+    await client.activate()
     return {"message": "CLient activated, receiving messages"}
 
 
