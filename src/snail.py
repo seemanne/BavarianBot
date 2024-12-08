@@ -31,16 +31,6 @@ def check_for_bluesky_link(message: str):
     return True, bsky_id
 
 
-def check_for_youtube_link(message: str):
-    matchli = re.search(r"youtube\.com/watch\?v=([^&]*)", message)
-    if not matchli:
-        matchli = re.search(r"youtu\.be/([^\?]*)", message)
-        if not matchli:
-            return False, None
-    youtube_id = f"youtube-{matchli.group(1)}"
-    return True, youtube_id
-
-
 def user_mention_to_id(mention: str):
     return int(mention.strip("<@>"))
 
@@ -206,7 +196,6 @@ class LinkChecker:
         self.rules_to_check = [
             check_for_twitter_link,
             check_for_bluesky_link,
-            check_for_youtube_link,
         ]
 
     def check_message(self, message: str):

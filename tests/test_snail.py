@@ -140,11 +140,3 @@ class LinkCheckerTest(unittest.TestCase):
         assert self.checker.check_message("https://fxtwitter.com/tekbog/status/1738295383749488720")[0]
         assert self.checker.check_message("https://x.com/tekbog/status/1738295383749488720")[0]
         assert self.checker.check_message("https://twitter.com/tekbog/status/1738295383749488720?t=bqEHRy2klOJBiQ-2XnnemA&s=19")[0]
-
-    def test_youtube_links(self):
-
-        tup_1 = self.checker.check_message("https://www.youtube.com/watch?v=Tec_5jQRNdY")
-        tup_2 = self.checker.check_message("https://youtu.be/Tec_5jQRNdY?si=ITUr1dk39PwX7Yvb&t=1")
-        assert tup_1[0]
-        assert tup_2[0]
-        assert tup_1[1] == tup_2[1]
