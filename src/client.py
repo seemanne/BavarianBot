@@ -1,11 +1,11 @@
 import asyncio
 import datetime
-import random
 import logging
 import re
 from typing import Any
 import sqlalchemy
 import discord
+import traceback
 from discord import app_commands
 
 import src.cinephile
@@ -65,9 +65,10 @@ class Maggus(discord.Client):
     def __str__(self) -> str:
         return "BavarianClient"
 
-    async def setup_hook(self):
+    async def setup_hook(self): # pragma: no cover
         if self.is_dev:
             guild_id = 143381234494603264
+            self.log.setLevel(logging.DEBUG)
         else:
             guild_id = 389103804835954699
 
@@ -123,7 +124,7 @@ class Maggus(discord.Client):
         # self.tagger(message)
         self.countdown_check(message)
         await self.snail_state.check_snail(message)
-    
+
     async def _run_event(
         self,
         coro,
@@ -141,8 +142,11 @@ class Maggus(discord.Client):
             except asyncio.CancelledError:
                 pass
 
-    async def on_error(self, event_method: str, exception: Exception, /, *args: Any, **kwargs: Any) -> None:
+    async def on_error(
+        self, event_method: str, exception: Exception, /, *args: Any, **kwargs: Any
+    ) -> None:
         self.log.error(f"Ignoring exception in {event_method}: {str(exception)}")
+        self.log.error("Traceback:\n".join(traceback.format_exception(exception)))
 
     def debug(self, message: discord.Message, response: str):
         if self.is_dev:
@@ -211,14 +215,18 @@ class Maggus(discord.Client):
 
         self.message_hooks[message.id] = src.tagger.TagAlterationFlow(message=message)
 
-    def deactivate(self):
+    async def deactivate(self):
         self.activated = False
         self.snail_state.dump_to_db()
         self.log.info(f"Dumped {len(self.snail_state.snail_cache)} cached snails to db")
 
-    def activate(self):
+    async def activate(self):
         self.snail_state.load_from_db()
-        self.log.info(f"Loaded {len(self.snail_state.snail_cache)} cached snails from db")
+        game = discord.Game("Snails | /feedback")
+        await self.change_presence(status=discord.Status.online, activity=game)
+        self.log.info(
+            f"Loaded {len(self.snail_state.snail_cache)} cached snails from db"
+        )
         self.activated = True
 
     def process_message_hooks(self, message: discord.Message):

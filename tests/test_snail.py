@@ -4,8 +4,7 @@ from unittest.mock import patch
 import sqlalchemy
 
 from src.orm import init_db
-from src.snail import SnailState, check_for_twitter_link, PollingStation, CachedXeet
-from src.datastructures import LRUCache
+from src.snail import SnailState, LinkChecker, PollingStation, CachedXeet
 from .mocking import Message, Author, TaskConsumingLoop
 
 
@@ -20,7 +19,7 @@ async def fake_sleep(time):
     return
 
 
-class ClientTest(unittest.TestCase):
+class SnailTest(unittest.TestCase):
     def setUp(self) -> None:
         self.sql_engine = sqlalchemy.create_engine("sqlite:///:memory:")
         init_db(self.sql_engine)
@@ -34,9 +33,10 @@ class ClientTest(unittest.TestCase):
     @patch("asyncio.sleep", new=fake_sleep)
     def test_snail_negative(self):
         message = Message(
-            content="https://www.youtube.com/watch?v=dQw4w9WgXcQ&pp=ygUXbmV2ZXIgZ29ubmEgZ2l2ZSB5b3UgdXA%3D",
+            content="https://news.ycombinator.com/item?id=42134964",
             author=Author(),
-            jump_url="message_jump_url"
+            jump_url="message_jump_url",
+            reference=None
         )
         self.loop.create_task(self.snail_state.check_snail(message))
         self.loop.run_tasks()
@@ -48,7 +48,8 @@ class ClientTest(unittest.TestCase):
         message = Message(
             content="https://twitter.com/tekbog/status/1738295383749488720",
             author=Author(),
-            jump_url="message_jump_url"
+            jump_url="message_jump_url",
+            reference=None
         )
         self.loop.create_task(self.snail_state.check_snail(message))
         self.loop.run_tasks()
@@ -56,11 +57,13 @@ class ClientTest(unittest.TestCase):
 
     @patch("random.random", new=fake_random(0.1))
     @patch("asyncio.sleep", new=fake_sleep)
+    @patch("src.snail.PollingStation.update_needle", new=fake_sleep)
     def test_snail_is_snail(self):
         message = Message(
             content="https://twitter.com/tekbog/status/1738295383749488720",
             author=Author(),
-            jump_url="message_jump_url"
+            jump_url="message_jump_url",
+            reference=None
         )
         self.loop.create_task(self.snail_state.check_snail(message))
         self.loop.create_task(self.snail_state.check_snail(message))
@@ -68,6 +71,7 @@ class ClientTest(unittest.TestCase):
         assert len(self.snail_state.snail_cache) == 1
         assert self.snail_state.snail_cache.get("1738295383749488720").post_count == 2
 
+    @patch("asyncio.create_task", new=fake_sleep)
     def test_ballot_stuffing(self):
         
         polling_station = PollingStation()
@@ -75,6 +79,7 @@ class ClientTest(unittest.TestCase):
         polling_station.vote_yes(voter)
         assert not polling_station.vote_no(voter)
 
+    @patch("asyncio.create_task", new=fake_sleep)
     def test_ballot_counting(self):
         
         polling_station = PollingStation()
@@ -122,10 +127,16 @@ class ClientTest(unittest.TestCase):
 
         self.snail_state.load_from_db()
     
-    def test_tweet_detection(self):
+class LinkCheckerTest(unittest.TestCase):
 
-        assert check_for_twitter_link("https://twitter.com/tekbog/status/1738295383749488720")[0]
-        assert check_for_twitter_link("this is a post: https://twitter.com/tekbog/status/1738295383749488720")[0]
-        assert check_for_twitter_link("https://fxtwitter.com/tekbog/status/1738295383749488720")[0]
-        assert check_for_twitter_link("https://x.com/tekbog/status/1738295383749488720")[0]
-        assert check_for_twitter_link("https://twitter.com/tekbog/status/1738295383749488720?t=bqEHRy2klOJBiQ-2XnnemA&s=19")[0]
+    def setUp(self):
+        
+        self.checker = LinkChecker()
+    
+    def test_twitter_links(self):
+
+        assert self.checker.check_message("https://twitter.com/tekbog/status/1738295383749488720")[0]
+        assert self.checker.check_message("this is a post: https://twitter.com/tekbog/status/1738295383749488720")[0]
+        assert self.checker.check_message("https://fxtwitter.com/tekbog/status/1738295383749488720")[0]
+        assert self.checker.check_message("https://x.com/tekbog/status/1738295383749488720")[0]
+        assert self.checker.check_message("https://twitter.com/tekbog/status/1738295383749488720?t=bqEHRy2klOJBiQ-2XnnemA&s=19")[0]

@@ -7,7 +7,7 @@ import discord
 from src.orm import init_db
 import src.crud as crud
 from src.client import Maggus
-from .mocking import Message, TaskConsumingLoop, Channel
+from .mocking import TaskConsumingLoop
 
 
 class ClientTest(unittest.TestCase):

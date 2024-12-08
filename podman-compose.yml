@@ -9,6 +9,7 @@ services:
       - "8000:80"
     volumes:
       - ./volumes/db:/code/db:Z
+      - ./volumes/data:/code/data:Z
 
 networks:
   default:

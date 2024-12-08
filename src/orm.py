@@ -1,4 +1,3 @@
-import sqlite3
 import sqlalchemy
 import datetime
 
@@ -37,10 +36,7 @@ class SnailBet(Base):
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
 
     def to_dict_for_insert(self):
-        return {
-            "user_id": self.user_id,
-            "result": self.result
-        }
+        return {"user_id": self.user_id, "result": self.result}
 
 
 class SnailVote(Base):
@@ -59,6 +55,7 @@ class SnailStateCache(Base):
     initial_jump_url = Column(String)
     initial_post_time = Column(DateTime)
     post_count = Column(Integer)
+
 
 class FishScore(Base):
     __tablename__ = "fishscore"
