@@ -5,6 +5,7 @@ import re
 from typing import Any
 import sqlalchemy
 import discord
+import traceback
 from discord import app_commands
 
 import src.cinephile
@@ -145,6 +146,7 @@ class Maggus(discord.Client):
         self, event_method: str, exception: Exception, /, *args: Any, **kwargs: Any
     ) -> None:
         self.log.error(f"Ignoring exception in {event_method}: {str(exception)}")
+        self.log.error("Traceback:\n".join(traceback.format_exception(exception)))
 
     def debug(self, message: discord.Message, response: str):
         if self.is_dev:
